@@ -1,0 +1,36 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - paragraph [ref=e4]: 借阅登记
+    - heading "写下你的名字" [level=2] [ref=e5]
+    - paragraph [ref=e6]: 姓名最多 6 个字，落款后翻开这份残卷。
+    - generic [ref=e7]:
+      - text: 档案落款
+      - textbox "档案落款" [ref=e8]:
+        - /placeholder: 请输入名字
+    - button "翻开档案" [ref=e9]
+  - generic [ref=e10]:
+    - banner [ref=e11]:
+      - generic [ref=e12]:
+        - heading "sy历险记" [level=1] [ref=e13]
+        - generic [ref=e14]:
+          - text: 章节
+          - strong [ref=e15]: 序章
+    - main [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - paragraph [ref=e20]: NODE-00
+            - heading "废弃观测站" [level=2] [ref=e21]
+          - paragraph [ref=e22]: 北岸旧区
+        - generic [ref=e23]:
+          - generic [ref=e24]: 中控回路 SYS / ARCHIVE
+          - text: 主终端重新供电，封存日志开始自检。
+        - paragraph
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - heading "下一步" [level=3] [ref=e27]
+          - paragraph [ref=e28]: 从当前线索中选择下一步。
+        - generic [ref=e29]:
+          - button "重新翻看" [ref=e30]
+          - link "返回主页" [ref=e31] [cursor=pointer]:
+            - /url: ../index.html

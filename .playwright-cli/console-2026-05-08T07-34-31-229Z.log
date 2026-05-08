@@ -1,0 +1,7 @@
+[      42ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://127.0.0.1:4173/cipher_game/chapters/prologue.js:0
+[      43ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://127.0.0.1:4173/cipher_game/chapters/chapter-01.js:0
+[      43ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://127.0.0.1:4173/cipher_game/chapters/chapter-02.js:0
+[      43ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://127.0.0.1:4173/cipher_game/chapters/chapter-03-pending.js:0
+[      43ms] [ERROR] Failed to load resource: net::ERR_SOCKET_NOT_CONNECTED @ http://127.0.0.1:4173/cipher_game/story.js:0
+[    2280ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:4173/cipher_game/styles.css:0
+[    2316ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:4173/cipher_game/app.js:0

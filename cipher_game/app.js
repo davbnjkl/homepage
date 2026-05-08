@@ -32,6 +32,7 @@
     };
     elements.gameShell = document.querySelector(".game-shell");
     elements.choicesCard = document.querySelector(".choices-card");
+    elements.root = document.documentElement;
 
     let currentNodeId = story.startNode;
     let renderToken = 0;
@@ -39,6 +40,54 @@
     let isTyping = false;
     let playerName = "";
     let hauntTimer = 0;
+    let staticTimer = 0;
+
+    function initializeRetroHorrorEffects() {
+        const overlay = document.createElement("div");
+        const noise = document.createElement("div");
+        const tear = document.createElement("div");
+        const corners = document.createElement("div");
+        const message = document.createElement("div");
+
+        overlay.className = "retro-horror-overlay";
+        noise.className = "retro-noise";
+        tear.className = "retro-tear";
+        corners.className = "retro-corners";
+        message.className = "retro-message";
+        message.textContent = "HELP";
+
+        overlay.append(noise, tear, corners, message);
+        document.body.appendChild(overlay);
+
+        document.addEventListener("pointermove", function (event) {
+            elements.root.style.setProperty("--mouse-x", event.clientX + "px");
+            elements.root.style.setProperty("--mouse-y", event.clientY + "px");
+        });
+
+        function pulseStatic() {
+            document.body.classList.add("is-static-hit");
+            window.setTimeout(function () {
+                document.body.classList.remove("is-static-hit");
+            }, 120 + Math.random() * 180);
+        }
+
+        function whisper() {
+            document.body.classList.add("is-haunted");
+            window.setTimeout(function () {
+                document.body.classList.remove("is-haunted");
+            }, 520);
+        }
+
+        staticTimer = window.setInterval(function () {
+            if (Math.random() > 0.42) {
+                pulseStatic();
+            }
+
+            if (Math.random() > 0.84) {
+                whisper();
+            }
+        }, 3600);
+    }
 
     function normalizeDialogue(dialogue) {
         if (Array.isArray(dialogue)) {
@@ -224,6 +273,14 @@
         setVisibleSegments(segments, Number.MAX_SAFE_INTEGER);
     }
 
+    function renderGameTitle(text) {
+        const title = text || "游乐园怪诞";
+
+        renderRichText(elements.gameTitle, title);
+        elements.gameTitle.setAttribute("data-ghost", title);
+        elements.gameTitle.setAttribute("aria-label", title);
+    }
+
     function createTypewriterState(target, text) {
         const content = text || "";
         const shell = document.createElement("span");
@@ -394,8 +451,7 @@
         isTyping = true;
         const token = renderToken;
 
-        renderRichText(elements.gameTitle, resolveText(story.title || "sy历险记"));
-        elements.gameTitle.setAttribute("data-ghost", resolveText(story.title || "sy历险记"));
+        renderGameTitle(resolveText(story.title || "游乐园怪诞"));
         renderRichText(elements.chapterValue, resolveText(node.chapter || "未知"));
         renderRichText(elements.sceneCode, resolveText(node.code || ""));
         renderRichText(elements.sceneTitle, resolveText(node.title || "无题残页"));
@@ -462,6 +518,8 @@
         document.body.classList.remove("modal-open");
         renderNode();
         window.clearTimeout(hauntTimer);
+        window.clearInterval(staticTimer);
+        initializeRetroHorrorEffects();
     }
 
     elements.startGameButton.addEventListener("click", startGame);
