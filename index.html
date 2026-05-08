@@ -2391,6 +2391,556 @@
                 font-size: 1rem;
             }
         }
+
+        /* Hardcore command-core override */
+        :root {
+            --page-pad: clamp(18px, 2.2vw, 34px);
+            --page-bg-image: url('images/bg1.webp');
+            --hard-bg: #020405;
+            --hard-panel: rgba(4, 10, 13, 0.84);
+            --hard-panel-2: rgba(8, 18, 22, 0.72);
+            --hard-line: rgba(95, 255, 219, 0.28);
+            --hard-line-hot: rgba(255, 106, 45, 0.72);
+            --hard-text: #d8fff5;
+            --hard-muted: #6d9b94;
+            --hard-accent: #5fffd9;
+            --hard-hot: #ff6a2d;
+            --hard-warn: #ffd166;
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+        }
+
+        html {
+            background: #000;
+        }
+
+        body {
+            font-family: "Rajdhani", "Noto Sans SC", sans-serif;
+            color: var(--hard-text);
+            background:
+                radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(95, 255, 217, 0.16), transparent 18rem),
+                linear-gradient(135deg, rgba(255, 106, 45, 0.07), transparent 28%),
+                #020405;
+            overflow: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        body::before {
+            z-index: 0;
+            background:
+                radial-gradient(circle at 18% 20%, rgba(255, 106, 45, 0.16), transparent 22%),
+                radial-gradient(circle at 78% 10%, rgba(95, 255, 217, 0.12), transparent 24%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.82)),
+                var(--page-bg-image) center / cover no-repeat;
+            filter: grayscale(0.72) contrast(1.52) brightness(0.44) saturate(0.72);
+            transform: scale(1.04);
+        }
+
+        body::after {
+            z-index: 1;
+            background:
+                linear-gradient(rgba(95, 255, 217, 0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(95, 255, 217, 0.045) 1px, transparent 1px),
+                repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 5px),
+                radial-gradient(circle at center, transparent 0 42%, rgba(0, 0, 0, 0.78) 100%);
+            background-size: 72px 72px, 72px 72px, 100% 5px, 100% 100%;
+            mix-blend-mode: screen;
+            opacity: 0.62;
+            animation: hard-scan 8s linear infinite;
+        }
+
+        .hardcore-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background:
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) left 26px top 26px / 112px 2px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) left 26px top 26px / 2px 112px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) right 26px top 26px / 112px 2px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) right 26px top 26px / 2px 112px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) left 26px bottom 26px / 112px 2px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) left 26px bottom 26px / 2px 112px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) right 26px bottom 26px / 112px 2px no-repeat,
+                linear-gradient(var(--hard-line-hot), var(--hard-line-hot)) right 26px bottom 26px / 2px 112px no-repeat;
+            opacity: 0.44;
+        }
+
+        .hardcore-overlay::before {
+            content: "SYS//CORE ONLINE";
+            position: absolute;
+            left: 34px;
+            bottom: 34px;
+            color: rgba(95, 255, 217, 0.52);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.22em;
+        }
+
+        .hardcore-overlay::after {
+            content: "";
+            position: absolute;
+            inset: -10%;
+            background:
+                repeating-linear-gradient(112deg, transparent 0 18px, rgba(95, 255, 217, 0.055) 18px 19px, transparent 19px 44px),
+                radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 106, 45, 0.18), transparent 12rem);
+            opacity: 0.5;
+            animation: hard-grid-drift 18s linear infinite;
+        }
+
+        .main-wrapper {
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: minmax(286px, 360px) minmax(430px, 1fr) minmax(286px, 360px);
+            width: min(100%, 1480px);
+            min-height: calc(100vh - (var(--page-pad) * 2));
+            gap: clamp(18px, 2vw, 30px);
+            align-items: stretch;
+        }
+
+        .container,
+        .info-panel,
+        .title-shell {
+            border-radius: 0;
+            border: 1px solid var(--hard-line);
+            background:
+                linear-gradient(180deg, rgba(10, 24, 28, 0.88), rgba(2, 6, 8, 0.9)),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 10px);
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.78),
+                0 24px 70px rgba(0, 0, 0, 0.48),
+                0 0 42px rgba(95, 255, 217, 0.08),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+                inset 0 0 44px rgba(0, 0, 0, 0.62);
+            clip-path: polygon(0 18px, 18px 0, calc(100% - 48px) 0, 100% 48px, 100% 100%, 48px 100%, 0 calc(100% - 48px));
+            backdrop-filter: blur(18px) saturate(1.15);
+        }
+
+        .container::before,
+        .info-panel::before,
+        .title-container::before {
+            top: 18px;
+            left: 20px;
+            color: var(--hard-accent);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.68rem;
+            letter-spacing: 0.22em;
+            text-shadow: 0 0 12px rgba(95, 255, 217, 0.55);
+        }
+
+        .container::after,
+        .info-panel::after,
+        .title-container::after {
+            background:
+                linear-gradient(90deg, transparent, rgba(95, 255, 217, 0.32), transparent),
+                linear-gradient(180deg, rgba(255, 106, 45, 0.1), transparent 24%);
+            opacity: 0.7;
+        }
+
+        .container::before {
+            content: "ACCESS//HUB";
+        }
+
+        .info-panel::before {
+            content: "TELEMETRY//LIVE";
+        }
+
+        .title-container::before {
+            content: "COMMAND//CORE";
+        }
+
+        .container,
+        .info-panel {
+            padding: 70px 24px 24px;
+        }
+
+        .title-container {
+            position: relative;
+            inset: auto;
+            transform: none;
+            z-index: 12;
+            pointer-events: auto;
+            padding: 0;
+            animation: hard-drop 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+
+        .title-shell {
+            min-height: 100%;
+            padding: clamp(28px, 3.2vw, 46px);
+            display: grid;
+            align-content: center;
+            gap: 22px;
+            overflow: hidden;
+        }
+
+        .title-shell::before {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            border: 1px solid rgba(95, 255, 217, 0.14);
+            background:
+                linear-gradient(90deg, rgba(95, 255, 217, 0.09), transparent 18%, transparent 82%, rgba(255, 106, 45, 0.08)),
+                repeating-linear-gradient(0deg, rgba(95, 255, 217, 0.04) 0 1px, transparent 1px 18px);
+            pointer-events: none;
+        }
+
+        .title-kicker,
+        .title-roman,
+        .meta-label,
+        .link-kicker,
+        .date-display,
+        .location-decoration::before,
+        .quote-item .quote-source {
+            font-family: "JetBrains Mono", "Noto Sans SC", monospace;
+            text-transform: uppercase;
+        }
+
+        .title-kicker {
+            color: var(--hard-hot);
+            font-size: clamp(0.72rem, 0.9vw, 0.86rem);
+            letter-spacing: 0.24em;
+        }
+
+        .title-wordmark {
+            color: #effffb;
+            font-family: "Orbitron", "Noto Sans SC", sans-serif;
+            font-size: clamp(3.2rem, 7vw, 7.2rem);
+            font-weight: 800;
+            line-height: 0.9;
+            letter-spacing: 0.02em;
+            text-shadow:
+                3px 0 0 rgba(255, 106, 45, 0.42),
+                -3px 0 0 rgba(95, 255, 217, 0.32),
+                0 0 18px rgba(95, 255, 217, 0.35),
+                0 0 54px rgba(255, 106, 45, 0.16);
+            animation: hard-title-glitch 7s steps(2) infinite;
+        }
+
+        .title-wordmark::after {
+            height: 3px;
+            background: linear-gradient(90deg, var(--hard-hot), var(--hard-accent), transparent);
+            box-shadow: 0 0 22px rgba(95, 255, 217, 0.45);
+        }
+
+        .title-roman {
+            color: var(--hard-accent);
+            letter-spacing: 0.32em;
+        }
+
+        .title-description {
+            color: #a9c9c2;
+            font-family: "Noto Sans SC", sans-serif;
+            letter-spacing: 0.12em;
+        }
+
+        .title-meta-grid {
+            gap: 12px;
+        }
+
+        .title-meta-card {
+            border-radius: 0;
+            border: 1px solid rgba(95, 255, 217, 0.22);
+            background:
+                linear-gradient(180deg, rgba(5, 15, 18, 0.92), rgba(0, 0, 0, 0.38)),
+                linear-gradient(90deg, rgba(255, 106, 45, 0.08), transparent 42%);
+            box-shadow: inset 0 0 26px rgba(95, 255, 217, 0.055);
+        }
+
+        .title-meta-card::before {
+            height: 3px;
+            background: linear-gradient(90deg, var(--hard-hot), var(--hard-accent), transparent);
+        }
+
+        .meta-label {
+            color: var(--hard-muted);
+        }
+
+        .title-meta-card strong {
+            color: var(--hard-text);
+            font-family: "Orbitron", "Noto Sans SC", sans-serif;
+        }
+
+        .logo {
+            width: 132px;
+            height: 132px;
+            border-radius: 0;
+            padding: 6px;
+            border: 1px solid rgba(95, 255, 217, 0.44);
+            background:
+                linear-gradient(135deg, rgba(95, 255, 217, 0.18), rgba(255, 106, 45, 0.08)),
+                #030809;
+            box-shadow:
+                0 0 0 8px rgba(0, 0, 0, 0.34),
+                0 0 36px rgba(95, 255, 217, 0.16),
+                inset 0 0 22px rgba(0, 0, 0, 0.6);
+            filter: grayscale(0.2) contrast(1.1) saturate(0.86);
+            clip-path: polygon(0 16px, 16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+        }
+
+        .logo:hover {
+            filter: grayscale(0) contrast(1.28) saturate(1.2);
+        }
+
+        .subtitle {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 0;
+            border: 1px solid rgba(95, 255, 217, 0.22);
+            background:
+                linear-gradient(90deg, rgba(95, 255, 217, 0.12), rgba(255, 106, 45, 0.08)),
+                rgba(0, 0, 0, 0.34);
+            color: var(--hard-text);
+            -webkit-text-fill-color: currentColor;
+            font-family: "JetBrains Mono", "Noto Sans SC", monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.12em;
+            text-align: left;
+        }
+
+        .subtitle::before {
+            color: var(--hard-hot);
+            content: "LINK STATE";
+        }
+
+        .panel-caption {
+            color: var(--hard-muted);
+            border-left-color: var(--hard-hot);
+            font-family: "JetBrains Mono", "Noto Sans SC", monospace;
+            letter-spacing: 0.08em;
+        }
+
+        .links {
+            gap: 12px;
+            max-height: 360px;
+        }
+
+        .link-item {
+            min-height: 84px;
+            border-radius: 0;
+            border: 1px solid rgba(95, 255, 217, 0.22);
+            background:
+                linear-gradient(90deg, rgba(95, 255, 217, 0.1), rgba(3, 9, 11, 0.95) 30%, rgba(255, 106, 45, 0.08)),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 11px);
+            color: var(--hard-text);
+            clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+                inset 0 0 28px rgba(95, 255, 217, 0.045);
+        }
+
+        .link-item:nth-child(n) {
+            background:
+                linear-gradient(90deg, rgba(95, 255, 217, 0.1), rgba(3, 9, 11, 0.95) 30%, rgba(255, 106, 45, 0.08)),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 11px);
+        }
+
+        .link-item::before {
+            background: linear-gradient(90deg, transparent, rgba(255, 106, 45, 0.32), rgba(95, 255, 217, 0.22), transparent);
+        }
+
+        .link-item:hover {
+            transform: translateX(6px);
+            border-color: rgba(255, 106, 45, 0.72);
+            box-shadow:
+                0 0 28px rgba(255, 106, 45, 0.18),
+                inset 0 0 32px rgba(95, 255, 217, 0.08);
+        }
+
+        .link-icon {
+            border-radius: 0;
+            border-color: rgba(95, 255, 217, 0.26);
+            background: rgba(0, 0, 0, 0.38);
+            color: var(--hard-accent);
+            box-shadow: inset 0 0 20px rgba(95, 255, 217, 0.08);
+        }
+
+        .link-icon-svg path {
+            stroke: currentColor;
+        }
+
+        .link-kicker {
+            color: var(--hard-hot);
+            letter-spacing: 0.18em;
+        }
+
+        .link-text {
+            color: var(--hard-text);
+            font-family: "Noto Sans SC", sans-serif;
+            font-weight: 800;
+        }
+
+        .link-arrow {
+            border-radius: 0;
+            border-color: rgba(255, 106, 45, 0.42);
+            background: rgba(255, 106, 45, 0.08);
+            color: var(--hard-warn);
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .time-display {
+            color: var(--hard-accent);
+            font-family: "Orbitron", "JetBrains Mono", monospace;
+            font-size: clamp(2rem, 3vw, 3.18rem);
+            text-shadow:
+                0 0 16px rgba(95, 255, 217, 0.4),
+                2px 0 0 rgba(255, 106, 45, 0.22);
+        }
+
+        .date-display,
+        .location-text {
+            color: #b9d8d1;
+            font-family: "JetBrains Mono", "Noto Sans SC", monospace;
+        }
+
+        .location-section,
+        .quote-item,
+        .welcome-message {
+            border-radius: 0;
+            border: 1px solid rgba(95, 255, 217, 0.2);
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, 0.36), rgba(7, 18, 20, 0.54)),
+                repeating-linear-gradient(90deg, rgba(95, 255, 217, 0.025) 0 1px, transparent 1px 9px);
+            box-shadow: inset 0 0 24px rgba(95, 255, 217, 0.045);
+        }
+
+        .info-top::before,
+        .info-bottom::before,
+        .location-decoration::before {
+            color: var(--hard-hot);
+            font-family: "JetBrains Mono", monospace;
+            letter-spacing: 0.22em;
+        }
+
+        .quote-item {
+            border-left: 3px solid var(--hard-hot);
+        }
+
+        .quote-item .quote-text {
+            color: var(--hard-text);
+            font-family: "Noto Sans SC", sans-serif;
+            font-weight: 600;
+        }
+
+        .quote-item .quote-source {
+            color: var(--hard-muted);
+        }
+
+        .title-spectrum {
+            filter: drop-shadow(0 0 10px rgba(95, 255, 217, 0.35));
+        }
+
+        .spectrum-bar {
+            background: linear-gradient(180deg, var(--hard-hot), var(--hard-accent));
+            animation: spectrum-pulse 1.2s ease-in-out infinite alternate;
+        }
+
+        body.hard-glitch .title-wordmark,
+        body.hard-glitch .container,
+        body.hard-glitch .info-panel {
+            filter: contrast(1.35) brightness(1.08);
+            transform: translateX(-1px);
+        }
+
+        @keyframes hard-scan {
+            from {
+                background-position: 0 0, 0 0, 0 0, 0 0;
+            }
+
+            to {
+                background-position: 0 72px, 72px 0, 0 20px, 0 0;
+            }
+        }
+
+        @keyframes hard-grid-drift {
+            from {
+                transform: translate3d(0, 0, 0);
+            }
+
+            to {
+                transform: translate3d(5%, 3%, 0);
+            }
+        }
+
+        @keyframes hard-title-glitch {
+            0%, 89%, 100% {
+                transform: translate(0, 0);
+            }
+
+            90% {
+                transform: translate(-3px, 1px);
+            }
+
+            91% {
+                transform: translate(4px, -1px);
+            }
+
+            92% {
+                transform: translate(0, 0);
+            }
+        }
+
+        @keyframes hard-drop {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .main-wrapper {
+                grid-template-columns: 1fr;
+                width: min(100%, 760px);
+            }
+
+            .title-container {
+                order: 0;
+            }
+
+            .container {
+                order: 1;
+            }
+
+            .info-panel {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hardcore-overlay {
+                opacity: 0.58;
+            }
+
+            .container,
+            .info-panel,
+            .title-shell {
+                clip-path: polygon(0 12px, 12px 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px));
+            }
+
+            .title-wordmark {
+                font-size: clamp(2.7rem, 15vw, 4.4rem);
+            }
+
+            .link-item {
+                grid-template-columns: 44px minmax(0, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -2399,8 +2949,8 @@
         <div class="container">
             <img src="images/1.jpg" alt="Logo" class="logo" id="mainLogo">
 
-            <p class="subtitle" id="subtitleText">欢迎进入小皮皮虾的控制台</p>
-            <p class="panel-caption">网页入口</p>
+            <p class="subtitle" id="subtitleText">核心链路已接入</p>
+            <p class="panel-caption">终端节点入口</p>
 
             <div class="links"></div>
             <p class="empty-tip">暂时还没有可用入口</p>
@@ -2410,26 +2960,26 @@
         <div class="title-container">
             <div class="title-shell">
                 <div class="title-copy">
-                    <p class="title-kicker">个人主站 / 轨道控制界面</p>
+                    <p class="title-kicker">PERSONAL COMMAND CORE / TERMINAL ARRAY</p>
                     <h1 class="title-wordmark">小皮皮虾</h1>
                     <p class="title-roman">XIAO PIPI XIA</p>
-                    <p class="title-description">控制界面</p>
+                    <p class="title-description">硬核终端界面</p>
                 </div>
                 <div class="title-meta-grid">
                     <div class="title-meta-card">
-                        <span class="meta-label">节点状态</span>
+                        <span class="meta-label">CORE STATUS</span>
                         <strong>在线运行</strong>
                     </div>
                     <div class="title-meta-card">
-                        <span class="meta-label">活动入口</span>
+                        <span class="meta-label">ACTIVE ROUTES</span>
                         <strong><span id="titleRouteCount">01</span> 个</strong>
                     </div>
                     <div class="title-meta-card">
-                        <span class="meta-label">界面协议</span>
-                        <strong>静态终端</strong>
+                        <span class="meta-label">PROTOCOL</span>
+                        <strong>STATIC-HUD</strong>
                     </div>
                     <div class="title-meta-card">
-                        <span class="meta-label">构建年份</span>
+                        <span class="meta-label">BUILD YEAR</span>
                         <strong id="titleBuildYear">2026</strong>
                     </div>
                 </div>
@@ -2467,9 +3017,9 @@
     <script>
         // 动态生成按钮的配置
         const buttonConfig = [
-            { href: 'build_sy/', kicker: '合成大sy', text: '原水小子诞生记' },
-            { href: 'tool/', kicker: '实用工具', text: '字符倒序工具' },
-            { href: 'cipher_game/', kicker: '文字冒险', text: 'sy历险记' },
+            { href: 'build_sy/', kicker: 'GAME NODE', text: '原水小子诞生记' },
+            { href: 'tool/', kicker: 'UTILITY NODE', text: '字符倒序工具' },
+            { href: 'cipher_game/', kicker: 'ARCHIVE NODE', text: '游乐园怪诞' },
             // { href: 'Web/005/refresh.html', kicker: 'WEB EXPERIMENT', text: '原水小子' },
             // { href: 'Web/007', kicker: 'PERSONAL NODE', text: 'jx宝宝' },
             // { href: 'Web/008', kicker: 'PERSONAL NODE', text: 'gjy宝宝' },
@@ -2534,6 +3084,7 @@
         function initializeHome() {
             generateButtons();
             syncTitleTelemetry();
+            initializeHardcoreInterface();
 
             const quoteDisplay = document.getElementById('quoteDisplay');
             if (quoteDisplay) {
@@ -2548,6 +3099,27 @@
             currentQuoteIndex = Math.floor(Math.random() * gameQuotes.length);
             showQuote(currentQuoteIndex);
             window.setInterval(nextQuote, 10000);
+        }
+
+        function initializeHardcoreInterface() {
+            if (!document.querySelector('.hardcore-overlay')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'hardcore-overlay';
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(overlay);
+            }
+
+            document.addEventListener('pointermove', (event) => {
+                document.documentElement.style.setProperty('--mouse-x', `${event.clientX}px`);
+                document.documentElement.style.setProperty('--mouse-y', `${event.clientY}px`);
+            });
+
+            window.setInterval(() => {
+                document.body.classList.add('hard-glitch');
+                window.setTimeout(() => {
+                    document.body.classList.remove('hard-glitch');
+                }, 140 + Math.random() * 160);
+            }, 4600);
         }
         // 缓存控制
         (function() {
@@ -2623,8 +3195,8 @@
 
         // 左侧欢迎语切换
         const subtitleMessages = [
-            "欢迎进入小皮皮虾的控制台",
-            "项目入口与实验页面持续整理中"
+            "核心链路已接入",
+            "终端节点持续监听中"
         ];
         let currentSubtitleIndex = 0;
         const subtitleMessage = document.getElementById('subtitleText');
