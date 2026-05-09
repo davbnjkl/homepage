@@ -1173,9 +1173,9 @@ body.is-static-hit .game-shell {
 
 .hero-title {
     font-family: "Eater", "Creepster", "ZCOOL XiaoWei", "Noto Serif SC", serif;
-    font-size: clamp(2.4rem, 7.2vw, 5.8rem);
+    font-size: clamp(2.15rem, 6.4vw, 5.1rem);
     color: #f1d37a;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     -webkit-text-stroke: 1px rgba(69, 0, 0, 0.82);
     text-shadow:
         2px 2px 0 #120000,
@@ -1184,6 +1184,7 @@ body.is-static-hit .game-shell {
         0 0 18px rgba(227, 59, 47, 0.42),
         0 0 44px rgba(227, 59, 47, 0.24);
     animation: title-haunt 6.5s steps(2) infinite;
+    white-space: nowrap;
 }
 
 .hero-title::before {
@@ -1425,7 +1426,8 @@ body.is-static-hit .game-shell {
     }
 
     .hero-title {
-        font-size: clamp(2.1rem, 14vw, 4rem);
+        font-size: clamp(1.68rem, 8.8vw, 2.56rem);
+        letter-spacing: 0.03em;
     }
 
     .choice-btn {
