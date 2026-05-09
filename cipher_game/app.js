@@ -42,12 +42,21 @@
     let skipTyping = false;
     let isTyping = false;
     let playerName = "";
+    let displayTitle = "";
     let displayName = "";
     let lastTransitionGlitched = false;
+    let lastTitleTransitionGlitched = false;
     let hauntTimer = 0;
     let staticTimer = 0;
     const sceneNumberIndex = buildSceneNumberIndex(story.nodes);
     const jumpPanelEntryNodeId = "park_001";
+    const titleWhispers = [
+        "我在看着你",
+        "它是真的吗",
+        "失乐园",
+        "它认识你",
+        "？？？？？"
+    ];
 
     function initializeRetroHorrorEffects() {
         const overlay = document.createElement("div");
@@ -148,6 +157,10 @@
         return index;
     }
 
+    function getResolvedStoryTitle() {
+        return resolveText(story.title || "游乐园怪诞");
+    }
+
     function getResolvedPlayerName() {
         return playerName || "访客";
     }
@@ -205,6 +218,41 @@
 
         displayName = resolvedName;
         lastTransitionGlitched = false;
+    }
+
+    function createHauntedTitle(source) {
+        const candidates = titleWhispers.filter(function (phrase) {
+            return phrase !== source;
+        });
+        const pool = candidates.length ? candidates : titleWhispers;
+
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function updateDisplayTitle(options) {
+        const settings = options || {};
+        const resolvedTitle = getResolvedStoryTitle();
+
+        if (settings.forceNormal) {
+            displayTitle = resolvedTitle;
+            lastTitleTransitionGlitched = false;
+            return;
+        }
+
+        if (lastTitleTransitionGlitched) {
+            displayTitle = resolvedTitle;
+            lastTitleTransitionGlitched = false;
+            return;
+        }
+
+        if (Math.random() < 0.08) {
+            displayTitle = createHauntedTitle(resolvedTitle);
+            lastTitleTransitionGlitched = true;
+            return;
+        }
+
+        displayTitle = resolvedTitle;
+        lastTitleTransitionGlitched = false;
     }
 
     function resolveText(text) {
@@ -266,6 +314,7 @@
 
         setJumpError("");
         elements.jumpInput.value = sceneNumber;
+        updateDisplayTitle({ forceNormal: true });
         currentNodeId = targetNodeId;
         renderNode();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -518,6 +567,7 @@
         button.append(main, sub);
         button.addEventListener("click", function () {
             if (choice.next && story.nodes[choice.next]) {
+                updateDisplayTitle();
                 updateDisplayName();
                 currentNodeId = choice.next;
                 renderNode();
@@ -602,7 +652,7 @@
         isTyping = true;
         const token = renderToken;
 
-        renderGameTitle(resolveText(story.title || "游乐园怪诞"));
+        renderGameTitle(displayTitle || getResolvedStoryTitle());
         renderRichText(elements.chapterValue, displayName || getResolvedPlayerName());
         renderRichText(elements.sceneCode, resolveText(node.code || ""));
         renderRichText(elements.sceneTitle, resolveSceneTitle(node.title || ""));
@@ -643,6 +693,7 @@
     });
 
     elements.restartButton.addEventListener("click", function () {
+        updateDisplayTitle({ forceNormal: true });
         updateDisplayName({ forceNormal: true });
         currentNodeId = story.startNode;
         renderNode();
@@ -683,6 +734,7 @@
         }
 
         playerName = enteredName;
+        updateDisplayTitle({ forceNormal: true });
         updateDisplayName({ forceNormal: true });
         elements.playerNameInput.value = enteredName;
         elements.entryModal.classList.remove("is-visible");
