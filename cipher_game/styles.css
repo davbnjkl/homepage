@@ -1173,7 +1173,7 @@ body.is-static-hit .game-shell {
 
 .hero-title {
     font-family: "Eater", "Creepster", "ZCOOL XiaoWei", "Noto Serif SC", serif;
-    font-size: clamp(1.96rem, 5.8vw, 4.72rem);
+    font-size: clamp(2.08rem, 6.05vw, 4.9rem);
     color: #f1d37a;
     letter-spacing: 0.04em;
     -webkit-text-stroke: 1px rgba(69, 0, 0, 0.82);
@@ -1426,8 +1426,8 @@ body.is-static-hit .game-shell {
     }
 
     .hero-title {
-        font-size: clamp(1.44rem, 7.7vw, 2.18rem);
-        letter-spacing: 0.015em;
+        font-size: clamp(1.54rem, 8.05vw, 2.28rem);
+        letter-spacing: 0.018em;
     }
 
     .choice-btn {
