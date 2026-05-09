@@ -24,6 +24,9 @@
         storyNote: document.getElementById("storyNote"),
         choicesHint: document.getElementById("choicesHint"),
         choicesGrid: document.getElementById("choicesGrid"),
+        jumpPanel: document.getElementById("jumpPanel"),
+        jumpInput: document.getElementById("jumpInput"),
+        jumpError: document.getElementById("jumpError"),
         restartButton: document.getElementById("restartButton"),
         entryModal: document.getElementById("entryModal"),
         playerNameInput: document.getElementById("playerNameInput"),
@@ -39,8 +42,12 @@
     let skipTyping = false;
     let isTyping = false;
     let playerName = "";
+    let displayName = "";
+    let lastTransitionGlitched = false;
     let hauntTimer = 0;
     let staticTimer = 0;
+    const sceneNumberIndex = buildSceneNumberIndex(story.nodes);
+    const jumpPanelEntryNodeId = "park_001";
 
     function initializeRetroHorrorEffects() {
         const overlay = document.createElement("div");
@@ -113,12 +120,155 @@
         return Array.from(value || "").slice(0, 6).join("");
     }
 
+    function normalizeSceneNumber(value) {
+        const digits = String(value || "").replace(/\D/g, "");
+
+        if (!digits) {
+            return "";
+        }
+
+        return digits.slice(-3).padStart(3, "0");
+    }
+
+    function buildSceneNumberIndex(nodes) {
+        const index = {};
+
+        Object.keys(nodes || {}).forEach(function (nodeId) {
+            const node = nodes[nodeId] || {};
+            const normalizedCode = normalizeSceneNumber(node.code);
+            const normalizedTitle = normalizeSceneNumber(node.title);
+            const normalizedId = normalizeSceneNumber(nodeId);
+            const sceneNumber = normalizedCode || normalizedTitle || normalizedId;
+
+            if (sceneNumber && !index[sceneNumber]) {
+                index[sceneNumber] = nodeId;
+            }
+        });
+
+        return index;
+    }
+
+    function getResolvedPlayerName() {
+        return playerName || "访客";
+    }
+
+    function createCorruptedName(source) {
+        const nameChars = Array.from(source || "访客");
+        const glitchChars = ["？", "#", "※", "■"];
+
+        if (!nameChars.length) {
+            return "？？？";
+        }
+
+        if (Math.random() < 0.34) {
+            return "？？？";
+        }
+
+        const corrupted = nameChars.map(function (char) {
+            if (Math.random() < 0.45) {
+                return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            }
+
+            return char;
+        }).join("");
+
+        if (corrupted !== source) {
+            return corrupted;
+        }
+
+        return nameChars.map(function (_char, index) {
+            return index === 0 ? "？" : nameChars[index];
+        }).join("");
+    }
+
+    function updateDisplayName(options) {
+        const settings = options || {};
+        const resolvedName = getResolvedPlayerName();
+
+        if (settings.forceNormal) {
+            displayName = resolvedName;
+            lastTransitionGlitched = false;
+            return;
+        }
+
+        if (lastTransitionGlitched) {
+            displayName = resolvedName;
+            lastTransitionGlitched = false;
+            return;
+        }
+
+        if (Math.random() < 0.1) {
+            displayName = createCorruptedName(resolvedName);
+            lastTransitionGlitched = true;
+            return;
+        }
+
+        displayName = resolvedName;
+        lastTransitionGlitched = false;
+    }
+
     function resolveText(text) {
         if (typeof text !== "string") {
             return "";
         }
 
-        return text.replace(/\{\{playerName\}\}/g, playerName || "访客");
+        return text.replace(/\{\{playerName\}\}/g, getResolvedPlayerName());
+    }
+
+    function resolveStatusLine(text) {
+        const resolved = resolveText(text || "").trim();
+
+        if (/^合集[一二三四五六七八九十0-9]+档案正在显字。?$/.test(resolved)) {
+            return "";
+        }
+
+        return resolved;
+    }
+
+    function resolveSceneTitle(text) {
+        const resolved = resolveText(text || "").replace(/剧情/g, "").trim();
+
+        return resolved || "无题残页";
+    }
+
+    function setJumpError(text) {
+        const message = text || "";
+
+        renderRichText(elements.jumpError, message);
+        elements.jumpError.hidden = !message;
+    }
+
+    function renderJumpPanel() {
+        const showJumpPanel = currentNodeId === jumpPanelEntryNodeId;
+
+        elements.jumpPanel.hidden = !showJumpPanel;
+
+        if (!showJumpPanel) {
+            elements.jumpInput.value = "";
+            setJumpError("");
+        }
+    }
+
+    function jumpToSceneByInput() {
+        const sceneNumber = normalizeSceneNumber(elements.jumpInput.value);
+
+        if (!sceneNumber) {
+            setJumpError("请输入剧情序号。");
+            return;
+        }
+
+        const targetNodeId = sceneNumberIndex[sceneNumber];
+
+        if (!targetNodeId || !story.nodes[targetNodeId]) {
+            setJumpError(sceneNumber + " 号尚未接入。");
+            return;
+        }
+
+        setJumpError("");
+        elements.jumpInput.value = sceneNumber;
+        currentNodeId = targetNodeId;
+        renderNode();
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function buildTextToken(text, classes) {
@@ -368,6 +518,7 @@
         button.append(main, sub);
         button.addEventListener("click", function () {
             if (choice.next && story.nodes[choice.next]) {
+                updateDisplayName();
                 currentNodeId = choice.next;
                 renderNode();
                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -452,13 +603,15 @@
         const token = renderToken;
 
         renderGameTitle(resolveText(story.title || "游乐园怪诞"));
-        renderRichText(elements.chapterValue, resolveText(node.chapter || "未知"));
+        renderRichText(elements.chapterValue, displayName || getResolvedPlayerName());
         renderRichText(elements.sceneCode, resolveText(node.code || ""));
-        renderRichText(elements.sceneTitle, resolveText(node.title || "无题残页"));
+        renderRichText(elements.sceneTitle, resolveSceneTitle(node.title || ""));
         renderRichText(elements.locationText, resolveText(node.location || "地点未明"));
         renderRichText(elements.speakerName, resolveText(node.speaker || "旧档案来源"));
         renderRichText(elements.speakerRole, resolveText(node.role || ""));
-        renderRichText(elements.statusLine, resolveText(node.statusLine || ""));
+        const statusLineText = resolveStatusLine(node.statusLine || "");
+        renderRichText(elements.statusLine, statusLineText);
+        elements.statusLine.hidden = !statusLineText;
         renderRichText(elements.choicesHint, "纸页正在显字，点击正文可直接看完。");
         elements.choicesGrid.innerHTML = "";
         elements.choicesGrid.classList.add("is-waiting");
@@ -477,6 +630,7 @@
             elements.choicesGrid.appendChild(createChoiceButton(choice));
         });
 
+        renderJumpPanel();
         renderRichText(elements.choicesHint, resolveText(node.choicesHint || "请从纸页留下的线索里继续。"));
         elements.choicesGrid.classList.remove("is-waiting");
         isTyping = false;
@@ -489,6 +643,7 @@
     });
 
     elements.restartButton.addEventListener("click", function () {
+        updateDisplayName({ forceNormal: true });
         currentNodeId = story.startNode;
         renderNode();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -504,6 +659,21 @@
         elements.nameError.hidden = true;
     });
 
+    elements.jumpInput.addEventListener("input", function () {
+        const cleanedValue = elements.jumpInput.value.replace(/\D/g, "").slice(0, 3);
+
+        if (elements.jumpInput.value !== cleanedValue) {
+            elements.jumpInput.value = cleanedValue;
+        }
+
+        setJumpError("");
+    });
+
+    elements.jumpPanel.addEventListener("submit", function (event) {
+        event.preventDefault();
+        jumpToSceneByInput();
+    });
+
     function startGame() {
         const enteredName = clampName(elements.playerNameInput.value.trim());
 
@@ -513,6 +683,7 @@
         }
 
         playerName = enteredName;
+        updateDisplayName({ forceNormal: true });
         elements.playerNameInput.value = enteredName;
         elements.entryModal.classList.remove("is-visible");
         document.body.classList.remove("modal-open");

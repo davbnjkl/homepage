@@ -619,6 +619,75 @@ body::after {
     gap: 10px;
 }
 
+.jump-panel {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(118, 73, 62, 0.32);
+    background:
+        linear-gradient(180deg, rgba(24, 15, 12, 0.92), rgba(8, 6, 5, 0.96)),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 6px);
+}
+
+.jump-panel[hidden] {
+    display: none !important;
+}
+
+.jump-label,
+.jump-error {
+    margin: 0;
+}
+
+.jump-label {
+    font-family: "Special Elite", "JetBrains Mono", monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    color: rgba(227, 186, 98, 0.84);
+}
+
+.jump-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+}
+
+.jump-input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 2px solid rgba(156, 255, 143, 0.24);
+    border-radius: 0;
+    background: rgba(2, 8, 4, 0.94);
+    color: var(--crt-green);
+    font-family: "Special Elite", "JetBrains Mono", monospace;
+    font-size: 0.95rem;
+    outline: none;
+    box-shadow: inset 0 0 18px rgba(57, 255, 84, 0.08);
+}
+
+.jump-input:focus {
+    border-color: rgba(227, 59, 47, 0.72);
+    box-shadow:
+        inset 0 0 18px rgba(57, 255, 84, 0.12),
+        0 0 0 1px rgba(227, 59, 47, 0.24);
+}
+
+.jump-input::placeholder {
+    color: rgba(156, 255, 143, 0.38);
+}
+
+.jump-btn {
+    min-width: 88px;
+}
+
+.jump-error {
+    min-height: 1.2em;
+    color: #d78f87;
+    font-size: 0.86rem;
+    line-height: 1.4;
+}
+
 .choices-grid.is-waiting {
     opacity: 0.44;
     pointer-events: none;
@@ -1361,5 +1430,13 @@ body.is-static-hit .game-shell {
 
     .choice-btn {
         padding-left: 34px;
+    }
+
+    .jump-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .jump-btn {
+        width: 100%;
     }
 }

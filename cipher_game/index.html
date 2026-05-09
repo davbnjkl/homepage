@@ -30,8 +30,7 @@
             <div class="hero-minimal">
                 <h1 class="hero-title" id="gameTitle" data-ghost="游乐园怪诞" aria-label="游乐园怪诞">游乐园怪诞</h1>
                 <div class="chapter-pill">
-                    <span class="chapter-pill-label">章节</span>
-                    <strong class="chapter-pill-value" id="chapterValue">序章</strong>
+                    <strong class="chapter-pill-value" id="chapterValue">访客</strong>
                 </div>
             </div>
         </header>
@@ -70,6 +69,14 @@
                     <p id="choicesHint">从当前线索中选择下一步。</p>
                 </div>
                 <div class="choices-grid" id="choicesGrid"></div>
+                <form class="jump-panel" id="jumpPanel" hidden>
+                    <label class="jump-label" for="jumpInput">输入序号直达</label>
+                    <div class="jump-controls">
+                        <input class="jump-input" id="jumpInput" type="text" inputmode="numeric" maxlength="3" placeholder="例如 137" autocomplete="off">
+                        <button class="secondary-btn jump-btn" id="jumpButton" type="submit">跳转</button>
+                    </div>
+                    <p class="jump-error" id="jumpError" hidden></p>
+                </form>
                 <div class="footer-actions">
                     <button class="secondary-btn" id="restartButton" type="button">重新翻看</button>
                     <a class="secondary-btn" href="../index.html">返回主页</a>
@@ -79,10 +86,10 @@
     </div>
 
     <script src="chapters/prologue.js"></script>
-    <script src="chapters/chapter-01.js"></script>
-    <script src="chapters/chapter-02.js"></script>
-    <script src="chapters/chapter-03.js"></script>
-    <script src="chapters/chapter-03-pending.js"></script>
+    <script src="chapters/chapter001-100.js"></script>
+    <script src="chapters/chapter101-200.js"></script>
+    <script src="chapters/chapter201-300.js"></script>
+    <script src="chapters/chapter301-400-pending.js"></script>
     <script src="story.js"></script>
     <script src="app.js"></script>
 </body>
