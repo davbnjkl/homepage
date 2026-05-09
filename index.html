@@ -2250,7 +2250,7 @@
         }
 
         .info-bottom::before {
-            content: '灵感摘录';
+            content: '';
         }
 
         .location-section {
@@ -2722,6 +2722,54 @@
             max-height: 360px;
         }
 
+        .route-section {
+            display: grid;
+            gap: 10px;
+        }
+
+        .route-section + .route-section {
+            margin-top: 6px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(95, 255, 217, 0.16);
+        }
+
+        .route-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-width: 0;
+            padding: 0 2px;
+            font-family: "JetBrains Mono", "Noto Sans SC", monospace;
+            text-transform: uppercase;
+        }
+
+        .route-section-title {
+            color: var(--hard-text);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+        }
+
+        .route-section-title::before {
+            content: "[";
+            color: var(--hard-hot);
+            margin-right: 4px;
+        }
+
+        .route-section-title::after {
+            content: "]";
+            color: var(--hard-hot);
+            margin-left: 4px;
+        }
+
+        .route-section-code {
+            color: var(--hard-muted);
+            font-size: 0.58rem;
+            letter-spacing: 0.14em;
+            text-align: right;
+        }
+
         .link-item {
             min-height: 84px;
             border-radius: 0;
@@ -2752,6 +2800,94 @@
             box-shadow:
                 0 0 28px rgba(255, 106, 45, 0.18),
                 inset 0 0 32px rgba(95, 255, 217, 0.08);
+        }
+
+        .link-item--promo {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+            gap: 0;
+            min-height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .link-item--promo:hover {
+            transform: translateY(-3px);
+        }
+
+        .link-media {
+            position: relative;
+            display: block;
+            aspect-ratio: 3 / 4;
+            min-height: 260px;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(255, 106, 45, 0.32);
+            background: #020405;
+        }
+
+        .link-media::before,
+        .link-media::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .link-media::before {
+            background:
+                linear-gradient(180deg, transparent 38%, rgba(0, 0, 0, 0.72)),
+                radial-gradient(circle at 52% 28%, transparent 0 28%, rgba(0, 0, 0, 0.48) 100%);
+        }
+
+        .link-media::after {
+            background:
+                linear-gradient(90deg, rgba(95, 255, 217, 0.18), transparent 18%, transparent 82%, rgba(255, 106, 45, 0.2)),
+                repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 5px);
+            mix-blend-mode: screen;
+            opacity: 0.56;
+        }
+
+        .link-media img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            filter: contrast(1.08) saturate(0.92) brightness(0.86);
+            transition: transform 0.35s ease, filter 0.35s ease;
+        }
+
+        .link-item--promo:hover .link-media img {
+            transform: scale(1.04);
+            filter: contrast(1.18) saturate(1.05) brightness(0.96);
+        }
+
+        .link-item--promo .link-icon {
+            position: absolute;
+            right: 14px;
+            top: 14px;
+            z-index: 2;
+            width: 42px;
+            height: 42px;
+            background: rgba(0, 0, 0, 0.56);
+            backdrop-filter: blur(10px);
+        }
+
+        .link-item--promo .link-copy {
+            padding: 14px 14px 10px;
+        }
+
+        .link-desc {
+            color: var(--hard-muted);
+            font-family: "Noto Sans SC", sans-serif;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            letter-spacing: 0.04em;
+        }
+
+        .link-item--promo .link-arrow {
+            width: calc(100% - 28px);
+            margin: 0 14px 14px;
         }
 
         .link-icon {
@@ -2940,6 +3076,545 @@
             .link-item {
                 grid-template-columns: 44px minmax(0, 1fr);
             }
+
+            .link-item--promo {
+                grid-template-columns: 1fr;
+            }
+
+            .link-media {
+                min-height: 220px;
+            }
+        }
+
+        /* Swap telemetry and route board: game showcase lives on the far right. */
+        .main-wrapper {
+            grid-template-columns: minmax(270px, 330px) minmax(420px, 1fr) minmax(420px, 540px);
+        }
+
+        .info-panel {
+            order: 1;
+        }
+
+        .title-container {
+            order: 2;
+        }
+
+        .container {
+            order: 3;
+            max-width: none;
+            max-height: none;
+        }
+
+        .links {
+            max-height: none;
+        }
+
+        .route-section:first-child {
+            gap: 12px;
+        }
+
+        .link-item--promo {
+            min-height: 0;
+            border-color: rgba(255, 106, 45, 0.42);
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.72),
+                0 0 34px rgba(255, 106, 45, 0.13),
+                inset 0 0 22px rgba(95, 255, 217, 0.045);
+        }
+
+        .link-media {
+            min-height: clamp(360px, 58vh, 620px);
+        }
+
+        .link-media::before {
+            background:
+                linear-gradient(180deg, transparent 58%, rgba(0, 0, 0, 0.36)),
+                radial-gradient(circle at 52% 28%, transparent 0 48%, rgba(0, 0, 0, 0.16) 100%);
+        }
+
+        .link-media::after {
+            opacity: 0.2;
+        }
+
+        .link-media img {
+            filter: contrast(1.02) saturate(1.02) brightness(0.98);
+        }
+
+        .link-item--promo:hover .link-media img {
+            filter: contrast(1.06) saturate(1.08) brightness(1.02);
+        }
+
+        .link-item--promo .link-icon {
+            background: rgba(0, 0, 0, 0.28);
+            border-color: rgba(95, 255, 217, 0.18);
+            box-shadow: inset 0 0 12px rgba(95, 255, 217, 0.04);
+            backdrop-filter: blur(4px);
+        }
+
+        .logo {
+            padding: 2px;
+            border-color: rgba(95, 255, 217, 0.24);
+            background: rgba(3, 8, 9, 0.24);
+            box-shadow:
+                0 0 0 4px rgba(0, 0, 0, 0.2),
+                0 0 18px rgba(95, 255, 217, 0.08),
+                inset 0 0 10px rgba(0, 0, 0, 0.32);
+            filter: contrast(1.02) saturate(1.02) brightness(0.98);
+        }
+
+        .logo:hover {
+            filter: contrast(1.08) saturate(1.08) brightness(1.02);
+        }
+
+        @media (max-width: 1200px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .title-container {
+                order: 1;
+            }
+
+            .container {
+                order: 2;
+            }
+
+            .info-panel {
+                order: 3;
+            }
+
+            .link-media {
+                min-height: clamp(300px, 68vw, 560px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .link-media {
+                min-height: 300px;
+            }
+        }
+
+        /* Final three-zone layout: core / telemetry+tool / game poster. */
+        .main-wrapper {
+            grid-template-columns: minmax(330px, 390px) minmax(300px, 380px) minmax(480px, 620px);
+        }
+
+        .title-container {
+            order: 1;
+        }
+
+        .info-panel {
+            order: 2;
+            display: grid;
+            grid-template-rows: auto auto auto auto;
+            align-content: start;
+            gap: 12px;
+            padding: 56px 18px 18px;
+        }
+
+        .container {
+            order: 3;
+            padding: 58px 18px 18px;
+        }
+
+        .container::before {
+            content: "GAME//SHOWCASE";
+        }
+
+        .title-container::before {
+            content: "COMMAND//CORE";
+        }
+
+        .title-shell {
+            align-content: start;
+        }
+
+        .title-identity {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 108px;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .title-identity .logo {
+            width: 108px;
+            height: 108px;
+            margin: 0;
+            justify-self: end;
+        }
+
+        .title-wordmark {
+            font-size: clamp(2.55rem, 4.4vw, 4.6rem);
+        }
+
+        .title-meta-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .title-meta-card {
+            min-height: 68px;
+        }
+
+        .info-top {
+            display: grid;
+            align-content: center;
+            min-height: 218px;
+            padding: 18px 14px;
+            border: 1px solid rgba(95, 255, 217, 0.16);
+            background:
+                radial-gradient(circle at 78% 16%, rgba(95, 255, 217, 0.12), transparent 28%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(6, 16, 18, 0.46));
+            clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+        }
+
+        .info-bottom {
+            padding: 0;
+            margin-top: 2px;
+            align-self: stretch;
+        }
+
+        .time-display {
+            font-size: clamp(2rem, 2.7vw, 3rem);
+            margin: 4px 0;
+        }
+
+        .date-display {
+            font-size: 0.84rem;
+            margin-bottom: 8px;
+        }
+
+        .location-section {
+            margin-top: 8px;
+            padding: 12px 12px;
+        }
+
+        .location-text {
+            font-size: 0.96rem;
+        }
+
+        .site-address {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+            padding: 12px 14px;
+            border: 1px solid rgba(95, 255, 217, 0.2);
+            background:
+                linear-gradient(90deg, rgba(95, 255, 217, 0.09), rgba(255, 106, 45, 0.06)),
+                rgba(0, 0, 0, 0.28);
+            clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+        }
+
+        .site-address-label {
+            color: var(--hard-hot);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.62rem;
+            letter-spacing: 0.18em;
+        }
+
+        .site-address-copy {
+            appearance: none;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: var(--hard-accent);
+            font-family: "JetBrains Mono", monospace;
+            font-size: clamp(0.86rem, 1.05vw, 1rem);
+            line-height: 1.35;
+            text-align: center;
+            cursor: pointer;
+            overflow-wrap: anywhere;
+            text-shadow: 0 0 14px rgba(95, 255, 217, 0.28);
+        }
+
+        .site-address-copy:hover {
+            color: var(--hard-warn);
+        }
+
+        .site-address-status {
+            min-height: 1em;
+            color: var(--hard-warn);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.58rem;
+            letter-spacing: 0.14em;
+            text-align: center;
+        }
+
+        .quotes-section {
+            margin-top: 0;
+            padding: 0;
+        }
+
+        .quote-item,
+        .welcome-message {
+            min-height: 92px;
+            padding: 10px 12px;
+        }
+
+        .quote-item .quote-text {
+            font-size: 0.78rem;
+            line-height: 1.48;
+        }
+
+        .quote-item .quote-source {
+            font-size: 0.62rem;
+        }
+
+        .tool-strip {
+            display: grid;
+            gap: 8px;
+            align-content: start;
+            min-height: 0;
+            max-height: none;
+            overflow-y: auto;
+            padding-right: 3px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(95, 255, 217, 0.34) rgba(0, 0, 0, 0.18);
+        }
+
+        .tool-strip::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .tool-strip::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.18);
+        }
+
+        .tool-strip::-webkit-scrollbar-thumb {
+            background: rgba(95, 255, 217, 0.34);
+        }
+
+        .tool-launch {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 6px 10px;
+            min-height: 79px;
+            padding: 12px 14px;
+            color: var(--hard-text);
+            text-decoration: none;
+            border: 1px solid rgba(95, 255, 217, 0.28);
+            background:
+                linear-gradient(135deg, rgba(95, 255, 217, 0.12), rgba(255, 106, 45, 0.1)),
+                rgba(0, 0, 0, 0.34);
+            clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+            box-shadow:
+                inset 0 0 24px rgba(95, 255, 217, 0.06),
+                0 0 20px rgba(95, 255, 217, 0.08);
+            overflow: hidden;
+        }
+
+        .tool-launch::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(95, 255, 217, 0.18), transparent);
+            transform: translateX(-120%);
+            transition: transform 0.45s ease;
+        }
+
+        .tool-launch:hover::before {
+            transform: translateX(120%);
+        }
+
+        .tool-launch-kicker,
+        .tool-launch-action {
+            position: relative;
+            z-index: 1;
+            color: var(--hard-hot);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.62rem;
+            letter-spacing: 0.18em;
+        }
+
+        .tool-launch strong {
+            position: relative;
+            z-index: 1;
+            font-family: "Noto Sans SC", sans-serif;
+            grid-column: 1;
+            font-size: clamp(0.86rem, 1.05vw, 1rem);
+            letter-spacing: 0.08em;
+        }
+
+        .tool-launch-action {
+            grid-row: 1 / span 2;
+            grid-column: 2;
+            color: var(--hard-accent);
+            justify-self: end;
+        }
+
+        .links {
+            height: 100%;
+        }
+
+        .route-section {
+            height: 100%;
+            grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .link-item--promo {
+            position: relative;
+            height: 100%;
+            min-height: clamp(560px, 78vh, 820px);
+        }
+
+        .link-media {
+            min-height: 100%;
+            height: 100%;
+            border-bottom: 0;
+        }
+
+        .link-item--promo .link-icon {
+            display: none;
+        }
+
+        .link-item--promo .link-copy {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 78px;
+            z-index: 3;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 106, 45, 0.32);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.48));
+            backdrop-filter: blur(2px);
+        }
+
+        .link-item--promo .link-arrow {
+            position: absolute;
+            right: 18px;
+            bottom: 22px;
+            z-index: 3;
+            width: auto;
+            min-width: 124px;
+            margin: 0;
+            padding: 11px 18px;
+            border-color: rgba(255, 106, 45, 0.72);
+            background: rgba(0, 0, 0, 0.38);
+            color: #ffd166;
+            backdrop-filter: blur(2px);
+        }
+
+        .link-media::before {
+            background:
+                linear-gradient(180deg, transparent 48%, rgba(0, 0, 0, 0.46) 88%),
+                radial-gradient(circle at 50% 22%, transparent 0 55%, rgba(0, 0, 0, 0.16) 100%);
+        }
+
+        .link-media::after {
+            opacity: 0.12;
+        }
+
+        @media (max-width: 1200px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+                width: min(100%, 780px);
+            }
+
+            .title-container {
+                order: 1;
+            }
+
+            .info-panel {
+                order: 2;
+            }
+
+            .container {
+                order: 3;
+            }
+
+            .link-item--promo {
+                min-height: clamp(460px, 80vw, 720px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title-identity {
+                grid-template-columns: 1fr;
+            }
+
+            .title-identity .logo {
+                justify-self: start;
+                width: 92px;
+                height: 92px;
+            }
+
+            .link-item--promo {
+                min-height: 520px;
+            }
+        }
+
+        /* Normalize the three desktop panels to the same footprint. */
+        .main-wrapper {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            align-items: stretch;
+        }
+
+        .title-container,
+        .info-panel,
+        .container {
+            width: 100%;
+            height: min(760px, calc(100vh - (var(--page-pad) * 2)));
+            min-height: 620px;
+            max-height: none;
+        }
+
+        .title-shell {
+            height: 100%;
+            min-height: 0;
+        }
+
+        .info-panel {
+            grid-template-rows: minmax(230px, auto) auto auto auto;
+            align-content: start;
+        }
+
+        .container {
+            display: grid;
+            grid-template-rows: minmax(0, 1fr);
+        }
+
+        .links,
+        .route-section,
+        .link-item--promo,
+        .link-media {
+            min-height: 0;
+            height: 100%;
+        }
+
+        .link-item--promo {
+            min-height: 0;
+        }
+
+        .title-wordmark {
+            font-size: clamp(2.4rem, 4vw, 4rem);
+        }
+
+        .title-identity {
+            grid-template-columns: minmax(0, 1fr) 96px;
+        }
+
+        .title-identity .logo {
+            width: 96px;
+            height: 96px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .title-container,
+            .info-panel,
+            .container {
+                height: auto;
+                min-height: 0;
+            }
+
+            .link-item--promo {
+                min-height: clamp(460px, 80vw, 720px);
+            }
         }
     </style>
 </head>
@@ -2947,11 +3622,6 @@
     <div class="main-wrapper">
         <!-- 左侧容器 -->
         <div class="container">
-            <img src="images/1.jpg" alt="Logo" class="logo" id="mainLogo">
-
-            <p class="subtitle" id="subtitleText">核心链路已接入</p>
-            <p class="panel-caption">终端节点入口</p>
-
             <div class="links"></div>
             <p class="empty-tip">暂时还没有可用入口</p>
         </div>
@@ -2961,7 +3631,10 @@
             <div class="title-shell">
                 <div class="title-copy">
                     <p class="title-kicker">PERSONAL COMMAND CORE / TERMINAL ARRAY</p>
-                    <h1 class="title-wordmark">小皮皮虾</h1>
+                    <div class="title-identity">
+                        <h1 class="title-wordmark">小皮皮虾</h1>
+                        <img src="images/1.jpg" alt="Logo" class="logo" id="mainLogo">
+                    </div>
                     <p class="title-roman">XIAO PIPI XIA</p>
                     <p class="title-description">硬核终端界面</p>
                 </div>
@@ -3006,6 +3679,18 @@
                     <div class="location-text">上海市徐汇区 </div>
                 </div>
             </div>
+            <div class="site-address">
+                <span class="site-address-label">SITE ADDRESS</span>
+                <button class="site-address-copy" id="copySiteAddressButton" type="button" data-address="http://davbnjkl.xyz/">http://davbnjkl.xyz/</button>
+                <span class="site-address-status" id="siteAddressStatus" aria-live="polite"></span>
+            </div>
+            <div class="tool-strip" aria-label="工具栏">
+                <a class="tool-launch" href="tools/" aria-label="进入工具合集">
+                    <span class="tool-launch-kicker">UTILITY HUB</span>
+                    <strong>工具合集</strong>
+                    <span class="tool-launch-action">OPEN HUB</span>
+                </a>
+            </div>
             <div class="info-bottom">
                 <div class="quotes-section">
                     <div class="quote-item" id="quoteDisplay"></div>
@@ -3015,16 +3700,27 @@
     </div>
 
     <script>
-        // 动态生成按钮的配置
-        const buttonConfig = [
-            { href: 'tool/', kicker: 'UTILITY NODE', text: '字符倒序工具' },
-            { href: 'cipher_game/', kicker: 'ARCHIVE NODE', text: '游乐园怪诞' },
-            // { href: 'Web/005/refresh.html', kicker: 'WEB EXPERIMENT', text: '原水小子' },
-            // { href: 'Web/007', kicker: 'PERSONAL NODE', text: 'jx宝宝' },
-            // { href: 'Web/008', kicker: 'PERSONAL NODE', text: 'gjy宝宝' },
+        // 动态生成入口的配置
+        const routeSections = [
+            {
+                label: '解谜游戏',
+                code: 'PUZZLE / GAME',
+                items: [
+                    {
+                        href: 'cipher_game/',
+                        kicker: 'ARCHIVE NODE',
+                        text: '游乐园怪诞',
+                        description: '闭园后的游乐园规则解谜',
+                        image: 'images/youleyuan-guaidan-promo.webp',
+                        imageAlt: '游乐园怪诞解谜游戏宣传图'
+                    }
+                ]
+            }
         ];
+        const toolRouteConfig = { href: 'tool/', kicker: 'UTILITY NODE', text: '字符倒序工具', description: '文本处理终端' };
+        const buttonConfig = routeSections.flatMap((section) => section.items).concat(toolRouteConfig);
         // 添加新按钮时，在这里按格式添加即可
-        // { href: '新链接', kicker: 'NEW NODE', text: '新项目' },
+        // { href: '新链接', kicker: 'NEW NODE', text: '新项目', description: '项目说明' },
         const outboundIconMarkup = `
             <svg viewBox="0 0 24 24" class="link-icon-svg" fill="none" focusable="false" aria-hidden="true">
                 <path d="M8 8h10v10"></path>
@@ -3050,20 +3746,35 @@
 
             emptyTip.style.display = 'none';
 
-            buttonConfig.forEach((button, index) => {
+            routeSections.forEach((section) => {
+                const sectionEl = document.createElement('section');
+                sectionEl.className = 'route-section';
+                sectionEl.innerHTML = `
+                    <div class="route-section-head">
+                        <span class="route-section-title">${section.label}</span>
+                        <span class="route-section-code">${section.code}</span>
+                    </div>
+                `;
+
+                (section.items || []).forEach((button, index) => {
                 const link = document.createElement('a');
                 link.href = button.href;
-                link.className = 'link-item';
+                link.className = `link-item${button.image ? ' link-item--promo' : ''}`;
                 link.setAttribute('aria-label', `进入${button.text}`);
                 link.innerHTML = `
+                    ${button.image ? `<span class="link-media"><img src="${button.image}" alt="${button.imageAlt || button.text}" loading="lazy"></span>` : ''}
                     <span class="link-icon" aria-hidden="true">${outboundIconMarkup}</span>
                     <span class="link-copy">
                         <span class="link-kicker">${button.kicker || `节点-${String(index + 1).padStart(2, '0')}`}</span>
                         <span class="link-text">${button.text}</span>
+                        ${button.description ? `<span class="link-desc">${button.description}</span>` : ''}
                     </span>
                     <span class="link-arrow" aria-hidden="true">进入</span>
                 `;
-                linksContainer.appendChild(link);
+                    sectionEl.appendChild(link);
+                });
+
+                linksContainer.appendChild(sectionEl);
             });
         }
 
@@ -3084,6 +3795,7 @@
             generateButtons();
             syncTitleTelemetry();
             initializeHardcoreInterface();
+            initializeSiteAddressCopy();
 
             const quoteDisplay = document.getElementById('quoteDisplay');
             if (quoteDisplay) {
@@ -3118,7 +3830,44 @@
                 window.setTimeout(() => {
                     document.body.classList.remove('hard-glitch');
                 }, 140 + Math.random() * 160);
-            }, 4600);
+                }, 4600);
+        }
+
+        function initializeSiteAddressCopy() {
+            const copyButton = document.getElementById('copySiteAddressButton');
+            const status = document.getElementById('siteAddressStatus');
+
+            if (!copyButton || !status) {
+                return;
+            }
+
+            copyButton.addEventListener('click', async () => {
+                const address = copyButton.dataset.address || copyButton.textContent.trim();
+
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(address);
+                    } else {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = address;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        textarea.remove();
+                    }
+
+                    status.textContent = 'COPIED';
+                } catch (error) {
+                    status.textContent = 'COPY FAILED';
+                }
+
+                window.setTimeout(() => {
+                    status.textContent = '';
+                }, 1600);
+            });
         }
         // 缓存控制
         (function() {
