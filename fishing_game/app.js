@@ -29,7 +29,6 @@ const elements = {
     upgradeBaitButton: document.getElementById("upgradeBaitButton"),
     upgradeBagButton: document.getElementById("upgradeBagButton"),
     upgradePondButton: document.getElementById("upgradePondButton"),
-    combineButton: document.getElementById("combineButton"),
     shopPanel: document.querySelector(".shop-panel"),
     decisionModal: document.getElementById("decisionModal"),
     decisionTitle: document.getElementById("decisionTitle"),
@@ -414,7 +413,6 @@ function renderButtons() {
     elements.upgradeBagButton.disabled = atSea || unlockedCellCount("backpack") >= GRID_SIZE || state.coins < bagCost || state.decisionLocked;
     elements.upgradePondButton.textContent = canUpgradePondToday ? `升级鱼塘 ${pondCost}G` : "鱼塘三天升级";
     elements.upgradePondButton.disabled = atSea || !canUpgradePondToday || unlockedCellCount("pond") >= GRID_SIZE || state.coins < pondCost || state.decisionLocked;
-    elements.combineButton.disabled = atSea || state.decisionLocked || findCombinableGroups().length === 0;
     elements.advanceTimeButton.textContent = nextTimeLabel();
 }
 
@@ -524,6 +522,7 @@ function processPondTransfers() {
             state.backpack.splice(state.pendingTransferIndex, 1);
             runCardHook(fish, "onEnterPond", { card: fish, reason: "returnHome" });
             addLog(`「${fish.name}」已放入家里鱼塘。`);
+            resolvePondCombines();
             continue;
         }
 
@@ -617,6 +616,7 @@ function openPondDecision(fish, backpackIndex) {
             runCardHook(fish, "onReplaceIn", { card: fish, removedCard: removed, source: "pond" });
             closeDecision();
             addLog(`「${fish.name}」进入鱼塘，替换了「${removed.name}」。`);
+            resolvePondCombines();
             processPondTransfers();
         });
         elements.decisionOptions.appendChild(button);
@@ -775,25 +775,19 @@ function openStorageUpgrade(storage) {
     render();
 }
 
-function allStoredCardRefs() {
-    return ["backpack", "pond"].flatMap((storage) => (
-        storageCards(storage).map((card, index) => ({ storage, index, card }))
-    ));
-}
-
-function findCombinableGroups() {
+function findPondCombinableGroups() {
     const groups = new Map();
 
-    allStoredCardRefs().forEach((ref) => {
-        const key = `${ref.card.id}::${ref.card.star || 1}`;
+    state.pond.forEach((card, index) => {
+        const key = `${card.id}::${card.star || 1}`;
         const group = groups.get(key) || {
             key,
-            id: ref.card.id,
-            name: ref.card.name,
-            star: ref.card.star || 1,
+            id: card.id,
+            name: card.name,
+            star: card.star || 1,
             refs: []
         };
-        group.refs.push(ref);
+        group.refs.push({ storage: "pond", index, card });
         groups.set(key, group);
     });
 
@@ -830,76 +824,34 @@ function createCombinedCard(group) {
     };
 }
 
-function combineGroup(group) {
-    const firstRef = group.refs[0];
-    const removed = group.refs.slice(0, 3)
-        .map((ref) => removeCardByUid(ref.card.uid))
-        .filter(Boolean);
-    const combined = createCombinedCard({ ...group, refs: removed });
-    const targetCards = storageCards(firstRef.storage);
-    const insertIndex = Math.min(firstRef.index, targetCards.length);
+function combinePondGroup(group) {
+    const materialRefs = group.refs.slice(0, 3);
+    const firstIndex = materialRefs[0].index;
+    const combined = createCombinedCard(group);
+    const materialUids = new Set(materialRefs.map((ref) => ref.card.uid));
 
-    if (!canStoreCard(targetCards, effectiveCapacity(firstRef.storage), combined, firstRef.storage)) {
-        const fallbackStorage = firstRef.storage === "backpack" ? "pond" : "backpack";
-
-        if (!canStoreCard(storageCards(fallbackStorage), effectiveCapacity(fallbackStorage), combined, fallbackStorage)) {
-            removed.forEach((ref) => storageCards(ref.storage).splice(ref.index, 0, ref.card));
-            addLog("合成后的鱼卡没有可用空间，合成取消。");
-            render();
-            return;
-        }
-
-        storageCards(fallbackStorage).push(combined);
-        addLog(`三张「${combined.name}」合成为 ${combined.star}★，已放入${STORAGE[fallbackStorage].label}。`);
-        render();
-        return;
-    }
-
-    targetCards.splice(insertIndex, 0, combined);
-    addLog(`三张「${combined.name}」合成为 ${combined.star}★，价值变为 ${combined.value}。`);
-    render();
+    state.pond = state.pond.filter((card) => !materialUids.has(card.uid));
+    state.pond.splice(Math.min(firstIndex, state.pond.length), 0, combined);
+    addLog(`鱼塘自动合成：三张「${combined.name}」变为 ${combined.star}★，保留在第 ${firstIndex + 1} 位。`);
 }
 
-function openCombineModal() {
-    const groups = findCombinableGroups();
+function resolvePondCombines() {
+    let combined = false;
 
-    if (groups.length === 0 || state.isAtSea || state.decisionLocked) {
-        addLog("当前没有三张同名同星的鱼卡可以合成。");
-        return;
+    while (true) {
+        const group = findPondCombinableGroups()[0];
+
+        if (!group) {
+            break;
+        }
+
+        combinePondGroup(group);
+        combined = true;
     }
 
-    state.decisionLocked = true;
-    elements.decisionModal.hidden = false;
-    elements.decisionTitle.textContent = "合成鱼卡";
-    elements.decisionCopy.textContent = "选择三张同名同星鱼卡，合成为一张星数 +1 的鱼卡。新卡价值继承三张材料的价值总和。";
-    elements.decisionPreview.innerHTML = "";
-    elements.decisionOptions.innerHTML = "";
-
-    groups.forEach((group) => {
-        const totalValue = group.refs
-            .slice(0, 3)
-            .reduce((sum, ref) => sum + (ref.card.value || 0), 0);
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "decision-option";
-        button.innerHTML = `<strong>${group.name} ${group.star}★ ×3</strong><span>合成为 ${group.star + 1}★，新价值 ${totalValue}</span>`;
-        button.addEventListener("click", () => {
-            closeDecision();
-            combineGroup(group);
-        });
-        elements.decisionOptions.appendChild(button);
-    });
-
-    const cancel = document.createElement("button");
-    cancel.type = "button";
-    cancel.className = "decision-option decision-danger";
-    cancel.innerHTML = "<strong>取消合成</strong><span>保留现有鱼卡</span>";
-    cancel.addEventListener("click", () => {
-        closeDecision();
+    if (combined) {
         render();
-    });
-    elements.decisionOptions.appendChild(cancel);
-    render();
+    }
 }
 
 function sellFish(source, index) {
@@ -943,6 +895,13 @@ function moveCard(source, sourceIndex, target, targetIndex) {
 
     const fromCards = storageCards(source);
     const toCards = storageCards(target);
+
+    if (source === "pond") {
+        addLog("鱼塘内鱼卡位置已固定，只能拖到商店卖出。");
+        render();
+        return;
+    }
+
     const [card] = fromCards.splice(sourceIndex, 1);
 
     if (!card) {
@@ -965,6 +924,12 @@ function moveCard(source, sourceIndex, target, targetIndex) {
 
     insertAt = Math.max(0, Math.min(insertAt, toCards.length));
     toCards.splice(insertAt, 0, card);
+
+    if (target === "pond") {
+        runCardHook(card, "onEnterPond", { card, reason: "manualMove" });
+        resolvePondCombines();
+    }
+
     addLog(`「${card.name}」已移动到${STORAGE[target].label}。`);
     render();
 }
@@ -1038,7 +1003,6 @@ elements.buyBaitButton.addEventListener("click", buyBait);
 elements.upgradeBaitButton.addEventListener("click", upgradeBait);
 elements.upgradeBagButton.addEventListener("click", () => openStorageUpgrade("backpack"));
 elements.upgradePondButton.addEventListener("click", () => openStorageUpgrade("pond"));
-elements.combineButton.addEventListener("click", openCombineModal);
 bindStorageDrag(elements.backpackGrid, "backpack");
 bindStorageDrag(elements.pondGrid, "pond");
 elements.shopPanel.addEventListener("dragover", (event) => {
