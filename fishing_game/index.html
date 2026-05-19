@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素远海鱼卡</title>
+    <link rel="icon" href="data:,">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar pixel-panel">
+            <div class="brand-block">
+                <p class="eyebrow">ROGUELIKE FISH CARDS / VOYAGE PROTOTYPE</p>
+                <h1>像素远海鱼卡</h1>
+                <p class="subtitle">每日分上午、下午出海，特殊情况下可开启夜航。饵料决定捕鱼次数，鱼卡效果改写规则。</p>
+            </div>
+            <div class="status-strip" aria-label="游戏状态">
+                <div class="status-chip">
+                    <span class="chip-label">日期</span>
+                    <strong>第 <span id="dayValue">1</span> 天</strong>
+                </div>
+                <div class="status-chip">
+                    <span class="chip-label">时段</span>
+                    <strong id="periodValue">上午</strong>
+                </div>
+                <div class="status-chip">
+                    <span class="chip-label">金币</span>
+                    <strong><span id="coinValue">0</span> G</strong>
+                </div>
+                <div class="status-chip">
+                    <span class="chip-label">背包</span>
+                    <strong><span id="bagCount">0</span>/<span id="bagMax">3</span></strong>
+                </div>
+                <div class="status-chip">
+                    <span class="chip-label">鱼塘</span>
+                    <strong><span id="pondCount">0</span>/<span id="pondMax">6</span></strong>
+                </div>
+                <div class="status-chip">
+                    <span class="chip-label">状态</span>
+                    <strong id="sceneStatus">在家准备</strong>
+                </div>
+            </div>
+        </header>
+
+        <main class="layout">
+            <section class="scene-column">
+                <section class="scene-panel pixel-panel">
+                    <div class="scene-header panel-heading">
+                        <div>
+                            <p class="panel-kicker">SCENE VIEW</p>
+                            <h2>出海场景</h2>
+                        </div>
+                        <div class="scene-badges">
+                            <span class="mini-chip">每日两航</span>
+                            <span class="mini-chip">鱼卡构筑</span>
+                            <span class="mini-chip">可替换</span>
+                        </div>
+                    </div>
+
+                    <div class="pixel-scene" id="pixelScene">
+                        <div class="sun"></div>
+                        <div class="cloud cloud-a"></div>
+                        <div class="cloud cloud-b"></div>
+                        <div class="mountains"></div>
+                        <div class="lake">
+                            <div class="water-grid"></div>
+                            <div class="ripple ripple-a"></div>
+                            <div class="ripple ripple-b"></div>
+                            <div class="fish-shadow fish-shadow-a"></div>
+                            <div class="fish-shadow fish-shadow-b"></div>
+                            <div class="bobber" id="bobber"></div>
+                        </div>
+                        <div class="dock"></div>
+                        <div class="reed reed-a"></div>
+                        <div class="reed reed-b"></div>
+                        <div class="fisherman">
+                            <div class="hat"></div>
+                            <div class="head"></div>
+                            <div class="body"></div>
+                            <div class="rod"></div>
+                            <div class="line"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="control-grid">
+                    <section class="voyage-panel pixel-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="panel-kicker">VOYAGE LOOP</p>
+                                <h2>出海捕鱼</h2>
+                            </div>
+                        </div>
+
+                        <div class="meter-group">
+                            <div class="meter-row">
+                                <span>当前饵料</span>
+                                <strong><span id="baitCount">0</span> 个</strong>
+                            </div>
+                            <div class="bait-rack" id="baitRack" aria-label="本次出海饵料"></div>
+                        </div>
+
+                        <div class="resource-grid">
+                            <div class="footer-card">
+                                <span class="footer-label">基础补给</span>
+                                <strong>每次出海 +3 普通饵</strong>
+                            </div>
+                            <div class="footer-card footer-card-highlight">
+                                <span class="footer-label">最近获得</span>
+                                <strong id="lastCatch">暂无鱼卡</strong>
+                            </div>
+                        </div>
+
+                        <div class="action-row">
+                            <button id="startTripButton" type="button" class="pixel-button">开始出海</button>
+                            <button id="fishButton" type="button" class="pixel-button pixel-button-accent">消耗饵料捕鱼</button>
+                            <button id="returnHomeButton" type="button" class="pixel-button pixel-button-muted">回家入塘</button>
+                            <button id="advanceTimeButton" type="button" class="pixel-button">推进时间</button>
+                        </div>
+                    </section>
+
+                    <section class="log-panel pixel-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="panel-kicker">EVENT FEED</p>
+                                <h2>航海日志</h2>
+                            </div>
+                        </div>
+                        <ul class="log-list" id="logList" aria-live="polite"></ul>
+                    </section>
+                </section>
+            </section>
+
+            <aside class="storage-panel pixel-panel">
+                <div class="panel-heading inventory-head">
+                    <div>
+                        <p class="panel-kicker">CARD STORAGE</p>
+                        <h2>鱼卡仓储</h2>
+                    </div>
+                    <p class="inventory-note">拖动鱼卡调整顺序，拖到商店直接出售。</p>
+                </div>
+
+                <section class="storage-section">
+                    <div class="section-title-row">
+                        <h3>随身背包</h3>
+                        <span><span id="bagCountSmall">0</span>/<span id="bagMaxSmall">3</span></span>
+                    </div>
+                    <div class="inventory-grid storage-grid" id="backpackGrid" aria-label="随身背包"></div>
+                </section>
+
+                <section class="storage-section">
+                    <div class="section-title-row">
+                        <h3>家里鱼塘</h3>
+                        <span><span id="pondCountSmall">0</span>/<span id="pondMaxSmall">6</span></span>
+                    </div>
+                    <div class="inventory-grid storage-grid pond-grid" id="pondGrid" aria-label="家里鱼塘"></div>
+                </section>
+
+                <section class="shop-panel">
+                    <div class="section-title-row">
+                        <h3>商店</h3>
+                        <span>卖鱼换金币</span>
+                    </div>
+                    <div class="shop-grid">
+                        <button id="buyBaitButton" type="button" class="pixel-button">买饵料 5G</button>
+                        <button id="upgradeBaitButton" type="button" class="pixel-button">升级饵料</button>
+                        <button id="upgradeBagButton" type="button" class="pixel-button pixel-button-accent">升级背包</button>
+                        <button id="upgradePondButton" type="button" class="pixel-button pixel-button-muted">升级鱼塘</button>
+                        <button id="combineButton" type="button" class="pixel-button pixel-button-accent">合成鱼卡</button>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+        <footer class="footer-bar">
+            <a href="../index.html" class="back-link">返回首页</a>
+        </footer>
+    </div>
+
+    <div class="decision-modal" id="decisionModal" hidden>
+        <div class="decision-card pixel-panel" role="dialog" aria-modal="true" aria-labelledby="decisionTitle">
+            <div class="panel-heading">
+                <div>
+                    <p class="panel-kicker">CARD DECISION</p>
+                    <h2 id="decisionTitle">选择鱼卡去留</h2>
+                </div>
+            </div>
+            <p class="decision-copy" id="decisionCopy"></p>
+            <div class="decision-preview" id="decisionPreview"></div>
+            <div class="decision-options" id="decisionOptions"></div>
+        </div>
+    </div>
+
+    <script src="./game-data.js"></script>
+    <script src="./card-effects.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>
