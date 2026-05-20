@@ -83,6 +83,26 @@ window.FISHING_CARD_EFFECTS = {
             }
         },
 
+        addCardValue: {
+            modifyNumber(effect, card, value, context) {
+                if (effect.scope !== "all" && context.targetCard && context.targetCard.uid !== card.uid) {
+                    return value;
+                }
+
+                return value + effect.amount;
+            }
+        },
+
+        multiplyCardValue: {
+            modifyNumber(effect, card, value, context) {
+                if (effect.scope !== "all" && context.targetCard && context.targetCard.uid !== card.uid) {
+                    return value;
+                }
+
+                return value * effect.multiplier;
+            }
+        },
+
         cancelSale: {
             run(effect, card, context) {
                 if (!context.sale) {
@@ -96,7 +116,10 @@ window.FISHING_CARD_EFFECTS = {
         gainBait: {
             run(effect, card, context) {
                 context.addBaitToTrip(effect.baitId, effect.amount);
-                context.addLog(`${card.name} 的效果触发，本次出海获得 ${effect.amount} 个${context.data.baitTypes[effect.baitId].name}。`);
+                const bait = context.data.baitTypes[effect.baitId]
+                    || context.data.baitTypes.blue
+                    || context.data.baitTypes.basic;
+                context.addLog(`${card.name} 的效果触发，本次出海获得 ${effect.amount} 个${bait.name}。`);
             }
         },
 
@@ -129,15 +152,18 @@ window.FISHING_CARD_EFFECTS = {
         legendaryBurst: {
             run(effect, card, context) {
                 context.state.nightUnlocked = true;
-                context.addBaitToTrip("fine", 1);
-                context.addLog(`${card.name} 的传说效果触发：今晚可夜航，并获得 1 个精制饵。`);
+                context.addBaitToTrip("blue", 1);
+                context.addLog(`${card.name} 的传说效果触发：今晚可夜航，并获得 1 个蓝色饵料。`);
             }
         },
 
         addTripBait: {
             run(effect, card, context) {
                 context.addBaitToTrip(effect.baitId, effect.amount);
-                context.addLog(`${card.name} 在出海准备时加入 ${effect.amount} 个${context.data.baitTypes[effect.baitId].name}。`);
+                const bait = context.data.baitTypes[effect.baitId]
+                    || context.data.baitTypes.blue
+                    || context.data.baitTypes.basic;
+                context.addLog(`${card.name} 在出海准备时加入 ${effect.amount} 个${bait.name}。`);
             }
         },
 
@@ -177,6 +203,143 @@ window.FISHING_CARD_EFFECTS = {
                 }
 
                 context.rarityWeights.push({ rarity: effect.rarity, weight: effect.amount });
+            }
+        },
+
+        multiplyRarityWeight: {
+            run(effect, card, context) {
+                const target = context.rarityWeights.find((item) => item.rarity === effect.rarity);
+
+                if (!target) {
+                    return;
+                }
+
+                target.weight *= effect.multiplier;
+            }
+        },
+
+        setRarityWeight: {
+            run(effect, card, context) {
+                const target = context.rarityWeights.find((item) => item.rarity === effect.rarity);
+
+                if (target) {
+                    target.weight = effect.weight;
+                    return;
+                }
+
+                context.rarityWeights.push({ rarity: effect.rarity, weight: effect.weight });
+            }
+        },
+
+        multiplyRarityWeights: {
+            run(effect, card, context) {
+                if (effect.periodId && context.period?.id !== effect.periodId) {
+                    return;
+                }
+
+                if (Number.isFinite(effect.maxTripCatchCount) && context.tripCatchCount > effect.maxTripCatchCount) {
+                    return;
+                }
+
+                Object.entries(effect.multipliers || {}).forEach(([rarity, multiplier]) => {
+                    const target = context.rarityWeights.find((item) => item.rarity === rarity);
+
+                    if (!target) {
+                        return;
+                    }
+
+                    target.weight *= multiplier;
+                });
+            }
+        },
+
+        addBaitBuyCost: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+        multiplyBaitBuyCost: {
+            modifyNumber(effect, card, value) {
+                return value * effect.multiplier;
+            }
+        },
+
+        addBaitSellValue: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+        multiplyBaitSellValue: {
+            modifyNumber(effect, card, value) {
+                return value * effect.multiplier;
+            }
+        },
+
+        addDailyBaitGain: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+        addBaitCapacity: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+        gainReserveBait: {
+            run(effect, card, context) {
+                const baitId = effect.baitId === "current"
+                    ? context.baitIdForLevel?.(context.state.baitLevel)
+                    : effect.baitId;
+                const added = context.addBaitToReserve(baitId, effect.amount);
+                const bait = context.data.baitTypes[baitId] || context.data.baitTypes.basic;
+                context.addLog(`${card.name} 的被动触发，库存获得 ${added}/${effect.amount} 个${bait.name}。`);
+            }
+        },
+
+        chanceUnlockNightAfterPeriod: {
+            run(effect, card, context) {
+                if (context.period?.id !== effect.periodId) {
+                    return;
+                }
+
+                if (context.random() < effect.chance) {
+                    context.state.nightUnlocked = true;
+                    context.addLog(`${card.name} 的被动触发，今晚夜航机会已开启。`);
+                }
+            }
+        },
+
+        addValueToLowestPond: {
+            run(effect, card, context) {
+                const target = context.state.pond.reduce((lowest, fish) => {
+                    if (!lowest || context.fishCardValue(fish) < context.fishCardValue(lowest)) {
+                        return fish;
+                    }
+
+                    return lowest;
+                }, null);
+
+                if (!target) {
+                    return;
+                }
+
+                target.value = (target.value || 0) + effect.amount;
+                context.addLog(`${card.name} 的被动触发，「${target.name}」价值 +${effect.amount}。`);
+            }
+        },
+
+        addCombinedCardValue: {
+            run(effect, card, context) {
+                if (!context.combinedCard) {
+                    return;
+                }
+
+                context.combinedCard.value = (context.combinedCard.value || 0) + effect.amount;
+                context.addLog(`${card.name} 的被动触发，合成结果价值 +${effect.amount}。`);
             }
         }
     }
