@@ -563,11 +563,42 @@ function currentPeriodAvailable() {
     return true;
 }
 
+function fishRaceLabel(fish) {
+    if (!fish) {
+        return "";
+    }
+
+    if (fish.race) {
+        return fish.race;
+    }
+
+    if (fish.tribe) {
+        return fish.tribe;
+    }
+
+    if (fish.archetype) {
+        return DATA.archetypeLabels?.[fish.archetype] || fish.archetype;
+    }
+
+    return "";
+}
+
 function cardDetailTemplate(fish) {
+    const race = fishRaceLabel(fish);
+    const raceRow = race ? `
+            <div class="fish-detail-row">
+                <span>种族</span>
+                <p>${race}</p>
+            </div>
+        ` : "";
+
     return `
         <div class="fish-detail">
-            <span>效果</span>
-            <p>${fish.effectText || "暂无特殊效果。"}</p>
+            ${raceRow}
+            <div class="fish-detail-row">
+                <span>效果</span>
+                <p>${fish.effectText || "暂无特殊效果。"}</p>
+            </div>
         </div>
     `;
 }

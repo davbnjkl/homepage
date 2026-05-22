@@ -204,6 +204,9 @@ window.FISHING_GAME_DATA = {
         legendary: "#ff9f43",
         mythic: "#ff4d5f"
     },
+    archetypeLabels: {
+        "school-growth": "共生鱼"
+    },
     effectHooks: {
         onStoredAfterCatch: "捕获并放入水族馆后",
         onEnterPond: "进入水族馆时",

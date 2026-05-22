@@ -3238,6 +3238,11 @@ body:not(.is-at-sea) .scene-panel::before {
     line-height: 1.35;
 }
 
+.fish-detail-row {
+    display: grid;
+    gap: 2px;
+}
+
 .fish-detail span {
     color: #6ee7ff;
     font-size: 0.72rem;
