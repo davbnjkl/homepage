@@ -113,35 +113,6 @@ window.FISHING_CARD_EFFECTS = {
             }
         },
 
-        gainBait: {
-            run(effect, card, context) {
-                context.addBaitToTrip(effect.baitId, effect.amount);
-                const bait = context.data.baitTypes[effect.baitId]
-                    || context.data.baitTypes.blue
-                    || context.data.baitTypes.basic;
-                context.addLog(`${card.name} 的效果触发，本次出海获得 ${effect.amount} 个${bait.name}。`);
-            }
-        },
-
-        unlockNightChance: {
-            run(effect, card, context) {
-                if (context.random() < effect.chance) {
-                    context.state.nightUnlocked = true;
-                    context.addLog(`${card.name} 点亮海面，今晚夜航机会已开启。`);
-                    return;
-                }
-
-                context.addLog(`${card.name} 的夜航效果没有触发。`);
-            }
-        },
-
-        unlockNight: {
-            run(effect, card, context) {
-                context.state.nightUnlocked = true;
-                context.addLog(`${card.name} 开启了今晚夜航机会。`);
-            }
-        },
-
         gainCoins: {
             run(effect, card, context) {
                 context.state.coins += effect.amount;
@@ -149,21 +120,33 @@ window.FISHING_CARD_EFFECTS = {
             }
         },
 
-        legendaryBurst: {
+        chanceGainCoins: {
             run(effect, card, context) {
-                context.state.nightUnlocked = true;
-                context.addBaitToTrip("blue", 1);
-                context.addLog(`${card.name} 的传说效果触发：今晚可夜航，并获得 1 个蓝色饵料。`);
+                if (context.random() >= effect.chance) {
+                    context.addLog(`${card.name} 的金币效果没有触发。`);
+                    return;
+                }
+
+                context.state.coins += effect.amount;
+                context.addLog(`${card.name} 的效果触发，获得 ${effect.amount}G。`);
             }
         },
 
-        addTripBait: {
-            run(effect, card, context) {
-                context.addBaitToTrip(effect.baitId, effect.amount);
-                const bait = context.data.baitTypes[effect.baitId]
-                    || context.data.baitTypes.blue
-                    || context.data.baitTypes.basic;
-                context.addLog(`${card.name} 在出海准备时加入 ${effect.amount} 个${bait.name}。`);
+        addCatchPickCount: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+        addFishingCost: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+        multiplyFishingCost: {
+            modifyNumber(effect, card, value) {
+                return value * effect.multiplier;
             }
         },
 
@@ -250,66 +233,6 @@ window.FISHING_CARD_EFFECTS = {
 
                     target.weight *= multiplier;
                 });
-            }
-        },
-
-        addBaitBuyCost: {
-            modifyNumber(effect, card, value) {
-                return value + effect.amount;
-            }
-        },
-
-        multiplyBaitBuyCost: {
-            modifyNumber(effect, card, value) {
-                return value * effect.multiplier;
-            }
-        },
-
-        addBaitSellValue: {
-            modifyNumber(effect, card, value) {
-                return value + effect.amount;
-            }
-        },
-
-        multiplyBaitSellValue: {
-            modifyNumber(effect, card, value) {
-                return value * effect.multiplier;
-            }
-        },
-
-        addDailyBaitGain: {
-            modifyNumber(effect, card, value) {
-                return value + effect.amount;
-            }
-        },
-
-        addBaitCapacity: {
-            modifyNumber(effect, card, value) {
-                return value + effect.amount;
-            }
-        },
-
-        gainReserveBait: {
-            run(effect, card, context) {
-                const baitId = effect.baitId === "current"
-                    ? context.baitIdForLevel?.(context.state.baitLevel)
-                    : effect.baitId;
-                const added = context.addBaitToReserve(baitId, effect.amount);
-                const bait = context.data.baitTypes[baitId] || context.data.baitTypes.basic;
-                context.addLog(`${card.name} 的被动触发，库存获得 ${added}/${effect.amount} 个${bait.name}。`);
-            }
-        },
-
-        chanceUnlockNightAfterPeriod: {
-            run(effect, card, context) {
-                if (context.period?.id !== effect.periodId) {
-                    return;
-                }
-
-                if (context.random() < effect.chance) {
-                    context.state.nightUnlocked = true;
-                    context.addLog(`${card.name} 的被动触发，今晚夜航机会已开启。`);
-                }
             }
         },
 

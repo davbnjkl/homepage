@@ -11,13 +11,11 @@ window.FISHING_GAME_DATA = {
         enabled: false,
         hooks: {
             onDayStart: "新的一天开始时",
-            onPeriodStart: "时段开始时",
-            onPeriodEnd: "时段结束时",
             onCatchStart: "捕鱼开始时",
             onCatchChoice: "生成鱼获选择时",
             onCheckpoint: "三日结算时",
             modifyBaitPool: "事件调整稀有度池",
-            modifyDailyBaitGain: "事件调整每日饵料",
+            modifyCatchPickCount: "事件调整鱼获选择数量",
             modifySellValue: "事件调整卖鱼价格",
             modifyCardValue: "事件调整鱼卡价值"
         },
@@ -31,13 +29,12 @@ window.FISHING_GAME_DATA = {
             shortName: "潮",
             avatar: "./assets/characters/tide-avatar.png",
             art: "./assets/characters/tide-art.png",
-            passiveText: "每天开始时额外获得 1 个当前等级饵料。",
+            passiveText: "每天开始时获得 1G。",
             effects: [
                 {
-                    id: "tide-daily-current-bait",
+                    id: "tide-daily-coin",
                     hook: "onDayStart",
-                    type: "gainReserveBait",
-                    baitId: "current",
+                    type: "gainCoins",
                     amount: 1
                 }
             ]
@@ -47,7 +44,9 @@ window.FISHING_GAME_DATA = {
             name: "红钩婆婆",
             title: "旧港商贩",
             shortName: "婆",
-            passiveText: "出售鱼卡额外 +1G；出售饵料次日结算额外 +1G。",
+            avatar: "./assets/characters/hook-granny-avatar.png",
+            art: "./assets/characters/hook-granny-art.png",
+            passiveText: "出售鱼卡额外 +1G。",
             effects: [
                 {
                     id: "granny-fish-sale",
@@ -55,34 +54,22 @@ window.FISHING_GAME_DATA = {
                     type: "addSellValue",
                     scope: "all",
                     amount: 1
-                },
-                {
-                    id: "granny-bait-sale",
-                    hook: "modifyBaitSellValue",
-                    type: "addBaitSellValue",
-                    amount: 1
                 }
             ]
         },
         starLantern: {
             id: "starLantern",
             name: "星灯少年",
-            title: "夜航旅人",
+            title: "星灯钓手",
             shortName: "星",
-            passiveText: "下午结束时 35% 开启夜航；夜航第一次捕鱼时蓝色及以上鱼权重提高。",
+            avatar: "./assets/characters/star-lantern-avatar.png",
+            art: "./assets/characters/star-lantern-art.png",
+            passiveText: "每天第一次捕鱼时，蓝色及以上鱼权重提高。",
             effects: [
                 {
-                    id: "star-lantern-night-chance",
-                    hook: "onPeriodEnd",
-                    type: "chanceUnlockNightAfterPeriod",
-                    periodId: "afternoon",
-                    chance: 0.35
-                },
-                {
-                    id: "star-lantern-night-first-catch",
+                    id: "star-lantern-daily-first-catch",
                     hook: "modifyBaitPool",
                     type: "multiplyRarityWeights",
-                    periodId: "night",
                     maxTripCatchCount: 0,
                     multipliers: {
                         rare: 1.35,
@@ -98,6 +85,8 @@ window.FISHING_GAME_DATA = {
             name: "缸匠洛",
             title: "水族馆匠人",
             shortName: "洛",
+            avatar: "./assets/characters/tank-smith-avatar.png",
+            art: "./assets/characters/tank-smith-art.png",
             passiveText: "每天开始时，水族馆最低价值鱼 +1 价值；每次合成结果额外 +2 价值。",
             effects: [
                 {
@@ -115,11 +104,6 @@ window.FISHING_GAME_DATA = {
             ]
         }
     },
-    periods: [
-        { id: "morning", label: "上午" },
-        { id: "afternoon", label: "下午" },
-        { id: "night", label: "晚上" }
-    ],
     baitTypes: {
         basic: {
             id: "basic",
@@ -221,11 +205,8 @@ window.FISHING_GAME_DATA = {
         mythic: "#ff4d5f"
     },
     effectHooks: {
-        onTripStart: "出海开始时",
-        onEnterBackpack: "进入背包时",
-        onStoredAfterCatch: "捕获并进入背包后",
+        onStoredAfterCatch: "捕获并放入水族馆后",
         onEnterPond: "进入水族馆时",
-        onReturnHome: "回家整理时",
         onBeforeSell: "出售前",
         onSell: "出售后",
         onDiscard: "鱼卡丢失时",
@@ -237,12 +218,9 @@ window.FISHING_GAME_DATA = {
         modifyCardValue: "计算鱼卡价值时",
         modifyDailyValueGain: "计算每日价值成长时",
         modifyBaitPool: "计算饵料掉落池时",
-        modifyBaitBuyCost: "计算饵料购买价格时",
-        modifyBaitSellValue: "计算饵料出售价格时",
-        modifyDailyBaitGain: "计算每日自动获得饵料时",
-        modifyBaitCapacity: "计算饵料库存上限时",
+        modifyCatchPickCount: "计算鱼获可选数量时",
+        modifyFishingCost: "计算钓鱼花费时",
         modifyCardSlotSize: "计算鱼卡占格时",
-        modifyBackpackCapacity: "计算背包容量时",
         modifyPondCapacity: "计算水族馆容量时"
     },
     effectTypes: {
@@ -250,29 +228,25 @@ window.FISHING_GAME_DATA = {
             label: "预留效果",
             fields: ["note"]
         },
-        gainBait: {
-            label: "获得饵料",
-            fields: ["baitId", "amount"]
-        },
-        unlockNightChance: {
-            label: "概率开启夜航",
-            fields: ["chance"]
-        },
-        unlockNight: {
-            label: "开启夜航",
-            fields: []
-        },
         gainCoins: {
             label: "获得金币",
             fields: ["amount"]
         },
-        legendaryBurst: {
-            label: "传说组合效果",
-            fields: []
+        chanceGainCoins: {
+            label: "概率获得金币",
+            fields: ["chance", "amount"]
         },
-        addTripBait: {
-            label: "出海开始时追加饵料",
-            fields: ["baitId", "amount"]
+        addCatchPickCount: {
+            label: "增加本次鱼获可选数量",
+            fields: ["amount"]
+        },
+        addFishingCost: {
+            label: "调整钓鱼花费",
+            fields: ["amount"]
+        },
+        multiplyFishingCost: {
+            label: "倍率调整钓鱼花费",
+            fields: ["multiplier"]
         },
         addSellValue: {
             label: "调整售价",
@@ -325,38 +299,6 @@ window.FISHING_GAME_DATA = {
         multiplyRarityWeights: {
             label: "批量倍率调整稀有度权重",
             fields: ["multipliers"]
-        },
-        addBaitBuyCost: {
-            label: "调整饵料购买价格",
-            fields: ["amount"]
-        },
-        multiplyBaitBuyCost: {
-            label: "倍率调整饵料购买价格",
-            fields: ["multiplier"]
-        },
-        addBaitSellValue: {
-            label: "调整饵料出售价格",
-            fields: ["amount"]
-        },
-        multiplyBaitSellValue: {
-            label: "倍率调整饵料出售价格",
-            fields: ["multiplier"]
-        },
-        addDailyBaitGain: {
-            label: "调整每日自动饵料",
-            fields: ["amount"]
-        },
-        addBaitCapacity: {
-            label: "调整饵料库存上限",
-            fields: ["amount"]
-        },
-        gainReserveBait: {
-            label: "获得库存饵料",
-            fields: ["baitId", "amount"]
-        },
-        chanceUnlockNightAfterPeriod: {
-            label: "时段结束概率开启夜航",
-            fields: ["periodId", "chance"]
         },
         addValueToLowestPond: {
             label: "水族馆最低价值鱼加值",
@@ -421,13 +363,12 @@ window.FISHING_GAME_DATA = {
             art: "./assets/fish/orange-carp.png",
             color: "#ff9d57",
             rarityColor: "#51d96b",
-            effectText: "捕获时，本次出海额外获得 1 个白色饵料。",
+            effectText: "捕获并放入水族馆时，获得 1G。",
             effects: [
                 {
-                    id: "orange-carp-extra-basic-bait",
+                    id: "orange-carp-catch-coin",
                     hook: "onStoredAfterCatch",
-                    type: "gainBait",
-                    baitId: "basic",
+                    type: "gainCoins",
                     amount: 1
                 }
             ]
@@ -443,13 +384,14 @@ window.FISHING_GAME_DATA = {
             art: "./assets/fish/red-lantern.png",
             color: "#ff6b6b",
             rarityColor: "#51d96b",
-            effectText: "捕获时，有 25% 概率开启今晚夜航。",
+            effectText: "捕获并放入水族馆时，有 25% 概率获得 2G。",
             effects: [
                 {
-                    id: "red-lantern-night-chance",
+                    id: "red-lantern-coin-chance",
                     hook: "onStoredAfterCatch",
-                    type: "unlockNightChance",
-                    chance: 0.25
+                    type: "chanceGainCoins",
+                    chance: 0.25,
+                    amount: 2
                 }
             ]
         },
@@ -464,12 +406,13 @@ window.FISHING_GAME_DATA = {
             art: "./assets/fish/moon-bass.png",
             color: "#91a4ff",
             rarityColor: "#4d91ff",
-            effectText: "捕获时，直接开启今晚夜航。",
+            effectText: "捕获并放入水族馆时，获得 2G。",
             effects: [
                 {
-                    id: "moon-bass-unlock-night",
+                    id: "moon-bass-catch-coins",
                     hook: "onStoredAfterCatch",
-                    type: "unlockNight"
+                    type: "gainCoins",
+                    amount: 2
                 }
             ]
         },
@@ -484,14 +427,13 @@ window.FISHING_GAME_DATA = {
             art: "./assets/fish/silver-sail.png",
             color: "#b8f3ff",
             rarityColor: "#4d91ff",
-            effectText: "捕获时，本次出海额外获得 1 个蓝色饵料。",
+            effectText: "捕获并放入水族馆时，获得 2G。",
             effects: [
                 {
-                    id: "silver-sail-extra-blue-bait",
+                    id: "silver-sail-catch-coins",
                     hook: "onStoredAfterCatch",
-                    type: "gainBait",
-                    baitId: "blue",
-                    amount: 1
+                    type: "gainCoins",
+                    amount: 2
                 }
             ]
         },
@@ -527,12 +469,13 @@ window.FISHING_GAME_DATA = {
             art: "./assets/fish/gold-dragon.png",
             color: "#ffd166",
             rarityColor: "#ff9f43",
-            effectText: "占 2 格。捕获时，开启今晚夜航并获得 1 个蓝色饵料。",
+            effectText: "占 2 格。捕获并放入水族馆时，获得 10G。",
             effects: [
                 {
-                    id: "gold-dragon-legendary-burst",
+                    id: "gold-dragon-catch-coins",
                     hook: "onStoredAfterCatch",
-                    type: "legendaryBurst"
+                    type: "gainCoins",
+                    amount: 10
                 }
             ]
         }

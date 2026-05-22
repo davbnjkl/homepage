@@ -11,12 +11,7 @@ const elements = {
     characterPreviewTitle: document.getElementById("characterPreviewTitle"),
     characterPreviewPassive: document.getElementById("characterPreviewPassive"),
     dayValue: document.getElementById("dayValue"),
-    periodValue: document.getElementById("periodValue"),
     coinValue: document.getElementById("coinValue"),
-    bagCount: document.getElementById("bagCount"),
-    bagMax: document.getElementById("bagMax"),
-    bagCountSmall: document.getElementById("bagCountSmall"),
-    bagMaxSmall: document.getElementById("bagMaxSmall"),
     pondCount: document.getElementById("pondCount"),
     pondMax: document.getElementById("pondMax"),
     pondValue: document.getElementById("pondValue"),
@@ -28,17 +23,13 @@ const elements = {
     baitCount: document.getElementById("baitCount"),
     baitLimit: document.getElementById("baitLimit"),
     baitRack: document.getElementById("baitRack"),
+    catchChoiceArea: document.getElementById("catchChoiceArea"),
     lastCatch: document.getElementById("lastCatch"),
     logList: document.getElementById("logList"),
     pixelScene: document.getElementById("pixelScene"),
-    backpackGrid: document.getElementById("backpackGrid"),
     pondGrid: document.getElementById("pondGrid"),
-    startTripButton: document.getElementById("startTripButton"),
     fishButton: document.getElementById("fishButton"),
-    returnHomeButton: document.getElementById("returnHomeButton"),
     advanceTimeButton: document.getElementById("advanceTimeButton"),
-    buyBaitButton: document.getElementById("buyBaitButton"),
-    sellBaitButton: document.getElementById("sellBaitButton"),
     upgradeCoreButton: document.getElementById("upgradeCoreButton"),
     shopPanel: document.querySelector(".shop-panel"),
     decisionModal: document.getElementById("decisionModal"),
@@ -49,15 +40,6 @@ const elements = {
 };
 
 const STORAGE = {
-    backpack: {
-        label: "背包",
-        cardsKey: "backpack",
-        cellsKey: "backpackCells",
-        gridSize: 6,
-        initialCells: [0, 1],
-        upgradeBaseCost: 20,
-        upgradeStep: 12
-    },
     pond: {
         label: "水族馆",
         cardsKey: "pond",
@@ -69,8 +51,7 @@ const STORAGE = {
     }
 };
 
-const BAIT_CAPACITY = 10;
-const INITIAL_BAIT_COUNT = 2;
+const INITIAL_COINS = 6;
 
 function createInitialState(modeId = "standard", gameStarted = false, characterId = "tide") {
     return {
@@ -78,32 +59,24 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
         modeId,
         characterId,
         day: 1,
-        periodIndex: 0,
-        coins: 0,
+        coins: INITIAL_COINS,
         baitLevel: 1,
-        backpackCells: createInitialCells(STORAGE.backpack),
         pondCells: createInitialCells(STORAGE.pond),
-        backpack: [],
         pond: [],
-        reserveBait: createBaitStack("basic", INITIAL_BAIT_COUNT),
-        tripBait: [],
-        tripCatchCount: 0,
-        pendingBaitSaleGold: 0,
-        isAtSea: false,
-        usedPeriods: {
-            morning: false,
-            afternoon: false,
-            night: false
-        },
-        nightUnlocked: false,
+        catchChoices: [],
+        selectedCatchUid: null,
+        catchPickLimit: 1,
+        catchPicksRemaining: 0,
+        dailyCatchCount: 0,
         pondUpgradeDay: 0,
-        pendingTransferIndex: 0,
         activeEvents: [],
         decisionLocked: false,
         dragData: null,
         selectedCard: null,
         lastCheckpointDay: 0,
         combineHighlightUid: null,
+        placementHighlightUid: null,
+        sellingCardUid: null,
         stats: {
             caught: 0,
             combined: 0,
@@ -126,7 +99,7 @@ function createBaitStack(baitId, amount) {
 }
 
 function currentPeriod() {
-    return DATA.periods[state.periodIndex];
+    return { id: "day", label: `第 ${state.day} 天` };
 }
 
 function currentMode() {
@@ -168,15 +141,17 @@ function activeEventSources() {
 }
 
 function storageCards(storage) {
-    return state[STORAGE[storage].cardsKey];
+    const config = STORAGE[storage];
+    return config ? state[config.cardsKey] : [];
 }
 
 function storageCells(storage) {
-    return state[STORAGE[storage].cellsKey];
+    const config = STORAGE[storage];
+    return config ? state[config.cellsKey] : [];
 }
 
 function storageGridSize(storage) {
-    return STORAGE[storage].gridSize;
+    return STORAGE[storage]?.gridSize || 0;
 }
 
 function unlockedCellCount(storage) {
@@ -205,7 +180,7 @@ function createFishInstance(template, baitId) {
 }
 
 function ownedCards() {
-    return [...state.backpack, ...state.pond];
+    return [...state.pond];
 }
 
 function effectSources() {
@@ -231,8 +206,6 @@ function effectContext(extra = {}) {
         data: DATA,
         random: Math.random,
         addLog,
-        addBaitToTrip,
-        addBaitToReserve,
         baitIdForLevel,
         fishCardValue,
         ownedCards,
@@ -307,7 +280,9 @@ function drawFishByBait(baitId) {
         baitId,
         rarityWeights,
         period: currentPeriod(),
-        tripCatchCount: state.tripCatchCount
+        day: state.day,
+        dailyCatchCount: state.dailyCatchCount,
+        tripCatchCount: state.dailyCatchCount
     });
     const availableWeights = normalizeRarityWeights(rarityWeights);
     const fallbackWeights = normalizeRarityWeights(bait.rarityWeights);
@@ -460,7 +435,7 @@ function checkpointSummaryTemplate(totalValue, target, passed) {
             <div><span>捕获</span><strong>${state.stats.caught}</strong></div>
             <div><span>合成</span><strong>${state.stats.combined}</strong></div>
             <div><span>卖鱼</span><strong>${state.stats.soldFish}</strong></div>
-            <div><span>用饵</span><strong>${state.stats.baitUsed}</strong></div>
+            <div><span>钓鱼</span><strong>${state.stats.baitUsed}</strong></div>
             <div><span>金币</span><strong>${state.coins}G</strong></div>
             <div><span>最高价值鱼</span><strong>${summaryCardText(bestValueCard)}</strong></div>
             <div><span>最高星鱼</span><strong>${summaryCardText(bestStarCard, "star")}</strong></div>
@@ -469,62 +444,16 @@ function checkpointSummaryTemplate(totalValue, target, passed) {
     `;
 }
 
-function baitCapacity() {
-    const capacity = EFFECTS.modifyNumberWithCards(
-        effectSources(),
-        "modifyBaitCapacity",
-        BAIT_CAPACITY,
-        effectContext()
-    );
-
-    return Math.max(0, Math.floor(capacity));
-}
-
-function baitPurchaseCost() {
+function fishingCost() {
     const baitId = baitIdForLevel(state.baitLevel);
     const cost = EFFECTS.modifyNumberWithCards(
         effectSources(),
-        "modifyBaitBuyCost",
+        "modifyFishingCost",
         2,
         effectContext({ baitId })
     );
 
     return Math.max(0, Math.floor(cost));
-}
-
-function baitSellValue(baitId = baitIdForLevel(state.baitLevel)) {
-    const value = EFFECTS.modifyNumberWithCards(
-        effectSources(),
-        "modifyBaitSellValue",
-        2,
-        effectContext({ baitId })
-    );
-
-    return Math.max(0, Math.floor(value));
-}
-
-function dailyBaitGain() {
-    const baseGain = 2 + Math.floor(Math.max(0, state.day - 1) / 3);
-    const gain = EFFECTS.modifyNumberWithCards(
-        effectSources(),
-        "modifyDailyBaitGain",
-        baseGain,
-        effectContext()
-    );
-
-    return Math.max(0, Math.floor(gain));
-}
-
-function addBaitToReserve(baitId, amount) {
-    const normalizedBaitId = baitId === "fine" ? "blue" : baitId;
-    const space = Math.max(0, baitCapacity() - state.reserveBait.length);
-    const added = Math.min(space, Math.max(0, amount));
-
-    for (let index = 0; index < added; index += 1) {
-        state.reserveBait.push(normalizedBaitId);
-    }
-
-    return added;
 }
 
 function growCardValuesForNewDay() {
@@ -533,17 +462,6 @@ function growCardValuesForNewDay() {
         card.value = (card.value || 0) + gain;
         runCardHook(card, "onDayValueGain", { card, gain });
     });
-}
-
-function addBaitToTrip(baitId, amount) {
-    const normalizedBaitId = baitId === "fine" ? "blue" : baitId;
-    for (let index = 0; index < amount; index += 1) {
-        state.tripBait.push(normalizedBaitId);
-    }
-}
-
-function baseTripBaits() {
-    return [];
 }
 
 function cardSlotSize(card, storage) {
@@ -568,10 +486,9 @@ function storageUsedSlots(cards, storage, skipIndex = -1) {
 }
 
 function effectiveCapacity(storage) {
-    const hook = storage === "backpack" ? "modifyBackpackCapacity" : "modifyPondCapacity";
     const capacity = EFFECTS.modifyNumberWithCards(
         ownedCards(),
-        hook,
+        "modifyPondCapacity",
         unlockedCellCount(storage),
         effectContext({ storage })
     );
@@ -583,24 +500,67 @@ function canStoreCard(cards, capacity, card, storage, skipIndex = -1) {
     return storageUsedSlots(cards, storage, skipIndex) + cardSlotSize(card, storage) <= capacity;
 }
 
+function cellPositionStyle(cellIndex) {
+    const column = (cellIndex % 3) + 1;
+    const row = Math.floor(cellIndex / 3) + 1;
+    return { column, row };
+}
+
+function pondOccupancy(skipUid = null) {
+    const occupied = new Map();
+
+    state.pond.forEach((card, index) => {
+        if (card.uid === skipUid) {
+            return;
+        }
+
+        const start = Number.isFinite(card.cellIndex) ? card.cellIndex : index;
+        const size = cardSlotSize(card, "pond");
+
+        for (let offset = 0; offset < size; offset += 1) {
+            occupied.set(start + offset, {
+                card,
+                index,
+                isStart: offset === 0,
+                start
+            });
+        }
+    });
+
+    return occupied;
+}
+
+function canPlacePondAt(card, cellIndex, replaceUid = null) {
+    const cells = storageCells("pond");
+    const size = cardSlotSize(card, "pond");
+    const startColumn = cellIndex % 3;
+    const occupied = pondOccupancy(replaceUid);
+
+    if (startColumn + size > 3) {
+        return false;
+    }
+
+    for (let offset = 0; offset < size; offset += 1) {
+        const targetCell = cellIndex + offset;
+
+        if (targetCell >= storageGridSize("pond") || !cells[targetCell] || occupied.has(targetCell)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function setStatus(text) {
     elements.sceneStatus.textContent = text;
 }
 
 function restoreTripStatus() {
-    if (state.isAtSea) {
-        setStatus(`${currentPeriod().label}出海`);
-    }
+    setStatus("水族馆整理");
 }
 
 function currentPeriodAvailable() {
-    const period = currentPeriod();
-
-    if (period.id === "night" && !state.nightUnlocked) {
-        return false;
-    }
-
-    return !state.usedPeriods[period.id];
+    return true;
 }
 
 function cardDetailTemplate(fish) {
@@ -638,45 +598,59 @@ function cardTemplate(fish, controls = "", expanded = false) {
 
 function emptySlotTemplate(index, locked) {
     if (locked) {
-        return `
-            <div class="slot-empty slot-locked">
-                <span>LOCK</span>
-                <span>${String(index + 1).padStart(2, "0")}</span>
-            </div>
-        `;
+        return "";
     }
 
     return `
         <div class="slot-empty">
-            <span>EMPTY</span>
-            <span>${String(index + 1).padStart(2, "0")}</span>
+            <span>${index + 1}</span>
         </div>
     `;
 }
 
 function renderStorageGrid(grid, storage) {
+    if (!grid) {
+        return;
+    }
+
     const cards = storageCards(storage);
     const cells = storageCells(storage);
     grid.innerHTML = "";
     grid.dataset.storage = storage;
 
     const cardByStartCell = new Map();
-    let cursor = 0;
+    const occupied = storage === "pond" ? pondOccupancy() : new Map();
 
-    cards.forEach((fish, index) => {
-        while (cursor < storageGridSize(storage) && !cells[cursor]) {
-            cursor += 1;
-        }
-        cardByStartCell.set(cursor, { fish, index });
-        cursor += cardSlotSize(fish, storage);
-    });
+    if (storage === "pond") {
+        cards.forEach((fish, index) => {
+            const start = Number.isFinite(fish.cellIndex) ? fish.cellIndex : index;
+            fish.cellIndex = start;
+            cardByStartCell.set(start, { fish, index });
+        });
+    } else {
+        let cursor = 0;
+
+        cards.forEach((fish, index) => {
+            while (cursor < storageGridSize(storage) && !cells[cursor]) {
+                cursor += 1;
+            }
+            cardByStartCell.set(cursor, { fish, index });
+            cursor += cardSlotSize(fish, storage);
+        });
+    }
 
     for (let cellIndex = 0; cellIndex < storageGridSize(storage); cellIndex += 1) {
         const entry = cardByStartCell.get(cellIndex);
+        const coveredEntry = occupied.get(cellIndex);
         const slot = document.createElement("article");
         slot.className = `slot ${cells[cellIndex] ? "slot-open" : "slot-locked-shell"}`;
         slot.dataset.storage = storage;
         slot.dataset.cellIndex = String(cellIndex);
+        if (storage === "pond") {
+            const position = cellPositionStyle(cellIndex);
+            slot.style.gridColumn = String(position.column);
+            slot.style.gridRow = String(position.row);
+        }
 
         if (entry) {
             const slotSize = Math.min(cardSlotSize(entry.fish, storage), storageGridSize(storage) - cellIndex);
@@ -684,12 +658,25 @@ function renderStorageGrid(grid, storage) {
                 && state.selectedCard.storage === storage
                 && state.selectedCard.uid === entry.fish.uid;
             const isCombined = state.combineHighlightUid === entry.fish.uid;
+            const isPlaced = state.placementHighlightUid === entry.fish.uid;
+            const isSelling = state.sellingCardUid === entry.fish.uid;
             slot.dataset.cardIndex = String(entry.index);
             slot.draggable = !state.decisionLocked;
             slot.classList.toggle("is-selected", isSelected);
             slot.classList.toggle("is-combined-result", isCombined);
-            slot.style.gridColumn = `span ${slotSize}`;
+            slot.classList.toggle("is-placed-result", isPlaced);
+            slot.classList.toggle("is-selling", isSelling);
+            if (storage === "pond") {
+                const position = cellPositionStyle(cellIndex);
+                slot.style.gridColumn = `${position.column} / span ${slotSize}`;
+                slot.style.gridRow = String(position.row);
+            } else {
+                slot.style.gridColumn = `span ${slotSize}`;
+            }
             slot.innerHTML = cardTemplate(entry.fish, "", isSelected);
+        } else if (coveredEntry && !coveredEntry.isStart) {
+            slot.classList.add("slot-covered");
+            slot.innerHTML = "";
         } else {
             slot.innerHTML = emptySlotTemplate(cellIndex, !cells[cellIndex]);
         }
@@ -700,28 +687,18 @@ function renderStorageGrid(grid, storage) {
 
 function renderBaitRack() {
     elements.baitRack.innerHTML = "";
-    const currentBaits = state.isAtSea ? state.tripBait : state.reserveBait;
-    elements.baitRack.classList.toggle("is-trip-bait", state.isAtSea);
-    elements.baitRack.classList.toggle("is-reserve-bait", !state.isAtSea);
+    const baitId = baitIdForLevel(state.baitLevel);
+    const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
+    elements.baitRack.classList.remove("is-trip-bait");
+    elements.baitRack.classList.add("is-reserve-bait");
 
-    if (currentBaits.length === 0) {
-        const empty = document.createElement("span");
-        empty.className = "bait-empty";
-        empty.textContent = state.isAtSea ? "饵料已用尽" : `库存 0/${baitCapacity()}`;
-        elements.baitRack.appendChild(empty);
-        return;
-    }
-
-    currentBaits.forEach((baitId) => {
-        const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
-        const item = document.createElement("span");
-        item.className = `bait-chip bait-${bait.id}`;
-        item.style.setProperty("--bait-color", bait.color || "#f4f7fb");
-        item.setAttribute("aria-label", bait.name);
-        item.textContent = "";
-        item.title = bait.name;
-        elements.baitRack.appendChild(item);
-    });
+    const item = document.createElement("span");
+    item.className = `bait-chip bait-${bait.id}`;
+    item.style.setProperty("--bait-color", bait.color || "#f4f7fb");
+    item.setAttribute("aria-label", bait.name);
+    item.textContent = "";
+    item.title = bait.name;
+    elements.baitRack.appendChild(item);
 }
 
 function upgradeCost(storage) {
@@ -743,433 +720,185 @@ function pondHasLockedCells() {
 }
 
 function renderButtons() {
-    const atSea = state.isAtSea;
-    const available = currentPeriodAvailable();
     const coreCost = coreUpgradeCost();
-    const baitCost = baitPurchaseCost();
-    const baitCap = baitCapacity();
-    const baitInventoryFull = state.reserveBait.length >= baitCap;
+    const fishCost = fishingCost();
     const maxBaitLevel = DATA.baitLevelOrder?.length || 6;
     const disabledBeforeStart = !state.gameStarted;
+    const hasPendingCatch = state.catchChoices.length > 0;
 
-    elements.startTripButton.disabled = disabledBeforeStart || atSea || !available || state.decisionLocked;
-    elements.fishButton.disabled = disabledBeforeStart || !atSea || state.tripBait.length === 0 || state.decisionLocked;
-    elements.returnHomeButton.disabled = disabledBeforeStart || !atSea || state.decisionLocked;
-    elements.advanceTimeButton.disabled = disabledBeforeStart || atSea || state.decisionLocked;
-    elements.buyBaitButton.textContent = `买饵料 ${baitCost}G`;
-    elements.buyBaitButton.disabled = disabledBeforeStart || atSea || baitInventoryFull || state.coins < baitCost || state.decisionLocked;
-    elements.sellBaitButton.textContent = state.pendingBaitSaleGold > 0
-        ? `卖饵料 待收${state.pendingBaitSaleGold}G`
-        : "卖饵料";
-    elements.sellBaitButton.disabled = disabledBeforeStart || atSea || state.reserveBait.length === 0 || state.decisionLocked;
-    elements.upgradeCoreButton.textContent = `升级补给 ${coreCost}G`;
+    elements.fishButton.disabled = disabledBeforeStart || state.coins < fishCost || state.decisionLocked || hasPendingCatch;
+    elements.advanceTimeButton.disabled = disabledBeforeStart || state.decisionLocked || hasPendingCatch;
+    elements.upgradeCoreButton.textContent = `升级饵料 ${coreCost}G`;
     elements.upgradeCoreButton.disabled = disabledBeforeStart
-        || atSea
         || state.baitLevel >= maxBaitLevel
         || state.coins < coreCost
         || state.decisionLocked;
-    elements.advanceTimeButton.textContent = nextTimeLabel();
+    elements.fishButton.textContent = `钓鱼 ${fishCost}G`;
+    elements.advanceTimeButton.textContent = "结束今天";
 }
 
 function render() {
-    const period = currentPeriod();
-    const backpackCapacity = effectiveCapacity("backpack");
     const pondCapacity = effectiveCapacity("pond");
-    const backpackUsedSlots = storageUsedSlots(state.backpack, "backpack");
     const pondUsedSlots = storageUsedSlots(state.pond, "pond");
     const totalValue = pondTotalValue();
 
     elements.dayValue.textContent = String(state.day);
-    elements.periodValue.textContent = period.label;
     elements.coinValue.textContent = String(state.coins);
-    elements.bagCount.textContent = String(backpackUsedSlots);
-    elements.bagMax.textContent = String(backpackCapacity);
-    elements.bagCountSmall.textContent = String(backpackUsedSlots);
-    elements.bagMaxSmall.textContent = String(backpackCapacity);
     elements.pondCount.textContent = String(pondUsedSlots);
     elements.pondMax.textContent = String(pondCapacity);
     elements.pondValue.textContent = String(totalValue);
     elements.checkpointTarget.textContent = String(nextCheckpointTarget());
     elements.pondCountSmall.textContent = String(pondUsedSlots);
     elements.pondMaxSmall.textContent = String(pondCapacity);
-    elements.baitScopeLabel.textContent = state.isAtSea ? "本次出海" : "库存饵料";
-    elements.baitCount.textContent = String(state.isAtSea ? state.tripBait.length : state.reserveBait.length);
-    elements.baitLimit.textContent = state.isAtSea ? " 个" : `/${baitCapacity()}`;
-    document.body.classList.toggle("is-at-sea", state.isAtSea);
+    elements.baitScopeLabel.textContent = "当前饵料";
+    elements.baitCount.textContent = `Lv.${state.baitLevel}`;
+    elements.baitLimit.textContent = "";
+    document.body.classList.remove("is-at-sea");
+    document.body.classList.toggle("has-selected-catch", Boolean(state.selectedCatchUid));
     document.body.classList.toggle("is-menu-open", !state.gameStarted);
     elements.mainMenu.hidden = state.gameStarted;
 
     renderBaitRack();
-    renderStorageGrid(elements.backpackGrid, "backpack");
     renderStorageGrid(elements.pondGrid, "pond");
+    renderCatchChoiceArea();
     renderButtons();
 }
 
-function startTrip() {
-    if (!currentPeriodAvailable()) {
-        addLog("当前时段没有可用的出海机会。");
+function catchPickLimit(baitId, bait, choices) {
+    const modified = EFFECTS.modifyNumberWithCards(
+        effectSources(),
+        "modifyCatchPickCount",
+        1,
+        effectContext({ baitId, bait, choices })
+    );
+
+    return Math.max(1, Math.min(choices.length, Math.floor(modified)));
+}
+
+function clearCatchChoices() {
+    state.catchChoices = [];
+    state.selectedCatchUid = null;
+    state.catchPickLimit = 1;
+    state.catchPicksRemaining = 0;
+}
+
+function placeFishInPond(fish, cellIndex) {
+    const occupied = pondOccupancy();
+    const target = occupied.get(cellIndex);
+    const replaceUid = target?.card.uid || null;
+
+    if (!canPlacePondAt(fish, cellIndex, replaceUid)) {
+        addLog(`第 ${cellIndex + 1} 格空间不足，无法放入「${fish.name}」。`);
+        return false;
+    }
+
+    if (target) {
+        const removed = target.card;
+        runCardHook(removed, "onReplaceOut", { card: removed, incomingCard: fish, source: "pond" });
+        runCardHook(removed, "onDiscard", { card: removed, reason: "replaceFromPond" });
+        state.pond = state.pond.filter((card) => card.uid !== removed.uid);
+        state.stats.replaced += 1;
+        state.stats.discarded += 1;
+        runCardHook(fish, "onReplaceIn", { card: fish, removedCard: removed, source: "pond" });
+        addLog(`「${fish.name}」放入第 ${cellIndex + 1} 格，替换了「${removed.name}」。`);
+    } else {
+        addLog(`「${fish.name}」放入水族馆第 ${cellIndex + 1} 格。`);
+    }
+
+    fish.cellIndex = cellIndex;
+    state.pond.push(fish);
+    state.pond.sort((left, right) => (left.cellIndex || 0) - (right.cellIndex || 0));
+    state.stats.caught += 1;
+    runCardHook(fish, "onEnterPond", { card: fish, reason: target ? "replace" : "catch" });
+    runCardHook(fish, "onStoredAfterCatch", { caughtFish: fish, targetStorage: "pond" });
+    state.placementHighlightUid = fish.uid;
+    window.setTimeout(() => {
+        if (state.placementHighlightUid === fish.uid) {
+            state.placementHighlightUid = null;
+            render();
+        }
+    }, 260);
+    resolvePondCombines();
+    return true;
+}
+
+function finishCatchPick(fish) {
+    state.catchChoices = state.catchChoices.filter((choice) => choice.uid !== fish.uid);
+    state.catchPicksRemaining -= 1;
+
+    if (state.catchPicksRemaining <= 0) {
+        state.catchChoices.forEach((choice) => {
+            runCardHook(choice, "onDiscard", { card: choice, reason: "notChosenAfterCatch" });
+        });
+        clearCatchChoices();
+        setStatus("水族馆整理");
+        addLog("本次鱼获选择完成，未选择的鱼已放回水里。");
         return;
     }
 
-    const period = currentPeriod();
-    state.isAtSea = true;
-    state.usedPeriods[period.id] = true;
-    state.tripBait = [...baseTripBaits(), ...state.reserveBait];
-    state.reserveBait = [];
-    state.tripCatchCount = 0;
-    state.selectedCard = null;
-    runOwnedCardsHook("onTripStart", { period });
-    elements.pixelScene.classList.remove("is-catching");
-    elements.pixelScene.classList.add("is-casting");
-    setStatus(`${period.label}出海`);
-    addLog(`${period.label}出海开始，携带 ${state.tripBait.length} 个库存饵料。`);
-
-    window.setTimeout(() => {
-        elements.pixelScene.classList.remove("is-casting");
-    }, 900);
-
-    render();
+    state.selectedCatchUid = null;
+    setStatus(`继续选择鱼获 ${state.catchPicksRemaining}/${state.catchPickLimit}`);
 }
 
-function addCaughtFishToBackpack(fish) {
-    state.backpack.push(fish);
-    state.stats.caught += 1;
-    runCardHook(fish, "onEnterBackpack", { card: fish, reason: "catch" });
-    runCardHook(fish, "onStoredAfterCatch", { caughtFish: fish });
-}
-
-function replaceBackpackFish(incomingFish, index) {
-    const removed = state.backpack[index];
-
-    if (!removed) {
-        return null;
+function renderCatchChoiceArea() {
+    if (!elements.catchChoiceArea) {
+        return;
     }
 
-    runCardHook(removed, "onReplaceOut", { card: removed, incomingCard: incomingFish, source: "backpack" });
-    runCardHook(removed, "onDiscard", { card: removed, reason: "replaceFromBackpack" });
-    state.backpack[index] = incomingFish;
-    state.stats.caught += 1;
-    state.stats.replaced += 1;
-    runCardHook(incomingFish, "onEnterBackpack", { card: incomingFish, reason: "replace" });
-    runCardHook(incomingFish, "onReplaceIn", { card: incomingFish, removedCard: removed, source: "backpack" });
-    runCardHook(incomingFish, "onStoredAfterCatch", { caughtFish: incomingFish });
+    elements.catchChoiceArea.innerHTML = "";
 
-    return removed;
-}
-
-function storeCaughtFish(fish) {
-    if (canStoreCard(state.backpack, effectiveCapacity("backpack"), fish, "backpack")) {
-        addCaughtFishToBackpack(fish);
-        restoreTripStatus();
-        render();
-        return true;
+    if (state.catchChoices.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "catch-choice-empty";
+        empty.innerHTML = "<strong>暂无鱼获</strong><span>支付金币钓鱼后，会在这里出现 3 条鱼。</span>";
+        elements.catchChoiceArea.appendChild(empty);
+        return;
     }
 
-    openBackpackDecision(fish);
-    return false;
-}
-
-function openCatchChoiceModal(choices) {
-    state.decisionLocked = true;
-    elements.decisionModal.hidden = false;
-    elements.decisionModal.classList.add("catch-choice-modal");
-    elements.decisionTitle.textContent = "本次鱼获";
-    elements.decisionCopy.textContent = "点击鱼卡查看效果，再选择 1 条鱼放入背包。";
-    elements.decisionPreview.innerHTML = "";
-    elements.decisionOptions.classList.remove("catch-replace-grid");
-    elements.decisionOptions.classList.add("catch-choice-grid");
-
-    function chooseFish(fish) {
-        elements.lastCatch.textContent = `${fish.name} / ${DATA.rarityLabels[fish.rarity]}`;
-        if (canStoreCard(state.backpack, effectiveCapacity("backpack"), fish, "backpack")) {
-            closeDecision();
-            storeCaughtFish(fish);
-            return;
-        }
-
-        openCatchReplacementOptions(fish, choices);
-    }
-
-    function renderChoices(expandedUid = null) {
-        elements.decisionOptions.innerHTML = "";
-
-        choices.forEach((fish) => {
-            const card = document.createElement("article");
-            const choiceIndex = choices.indexOf(fish);
-            const expanded = expandedUid === fish.uid;
-            card.className = `catch-choice-card ${expanded ? "is-expanded" : ""}`;
-            card.style.setProperty("--choice-index", String(choiceIndex));
-            card.tabIndex = 0;
-            card.innerHTML = cardTemplate(
-                fish,
-                expanded ? `<button class="inline-card-action choose-catch-button" type="button">带走</button>` : "",
-                expanded
-            );
-            card.addEventListener("click", (event) => {
-                const chooseButton = event.target.closest(".choose-catch-button");
-
-                if (chooseButton) {
-                    event.stopPropagation();
-                    chooseFish(fish);
-                    return;
-                }
-
-                renderChoices(expanded ? null : fish.uid);
-            });
-            elements.decisionOptions.appendChild(card);
-        });
-    }
-
-    renderChoices();
-    render();
-}
-
-function openCatchReplacementOptions(incomingFish, choices) {
-    elements.decisionTitle.textContent = "背包已满";
-    elements.decisionCopy.textContent = "点击背包鱼卡查看效果，再选择要替换的鱼卡。";
-    elements.decisionPreview.innerHTML = `
-        <div class="replacement-preview-label">准备带走</div>
-        ${cardTemplate(incomingFish, "", true)}
-    `;
-    elements.decisionOptions.innerHTML = "";
-    elements.decisionOptions.classList.remove("catch-choice-grid");
-    elements.decisionOptions.classList.add("catch-replace-grid");
-
-    function renderReplaceOptions(expandedUid = null) {
-        elements.decisionOptions.innerHTML = "";
-
-        state.backpack.forEach((fish, index) => {
-            const canReplace = canStoreCard(state.backpack, effectiveCapacity("backpack"), incomingFish, "backpack", index);
-            const expanded = expandedUid === fish.uid;
-            const card = document.createElement("article");
-            card.className = `catch-replace-card ${expanded ? "is-expanded" : ""} ${canReplace ? "" : "is-disabled"}`;
-            card.tabIndex = 0;
-            card.innerHTML = `
-                ${cardTemplate(
-                    fish,
-                    expanded
-                        ? `<button class="inline-card-action replace-catch-button" type="button" ${canReplace ? "" : "disabled"}>${canReplace ? "替换这张" : "占格不足"}</button>`
-                        : "",
-                    expanded
-                )}
-            `;
-            card.addEventListener("click", (event) => {
-                const replaceButton = event.target.closest(".replace-catch-button");
-
-                if (replaceButton) {
-                    event.stopPropagation();
-                    if (!canReplace) {
-                        return;
-                    }
-
-                    const removed = replaceBackpackFish(incomingFish, index);
-                    closeDecision();
-                    addLog(`已用「${incomingFish.name}」替换背包中的「${removed.name}」。`);
-                    restoreTripStatus();
-                    render();
-                    return;
-                }
-
-                renderReplaceOptions(expanded ? null : fish.uid);
-            });
-            elements.decisionOptions.appendChild(card);
-        });
-
-        const backButton = document.createElement("button");
-        backButton.type = "button";
-        backButton.className = "decision-option";
-        backButton.innerHTML = "<strong>返回鱼获选择</strong><span>重新选择本次钓上的 3 条鱼</span>";
-        backButton.addEventListener("click", () => {
-            elements.decisionOptions.classList.remove("catch-replace-grid");
-            openCatchChoiceModal(choices);
-        });
-        elements.decisionOptions.appendChild(backButton);
-
-        const discardButton = document.createElement("button");
-        discardButton.type = "button";
-        discardButton.className = "decision-option decision-danger";
-        discardButton.innerHTML = `<strong>放弃 ${incomingFish.name}</strong><span>保留现有背包，这条鱼直接丢失</span>`;
-        discardButton.addEventListener("click", () => {
-            runCardHook(incomingFish, "onDiscard", { card: incomingFish, reason: "backpackFull" });
-            state.stats.discarded += 1;
-            closeDecision();
-            addLog(`背包已满，「${incomingFish.name}」未能入包，已经丢失。`);
-            restoreTripStatus();
+    state.catchChoices.forEach((fish, index) => {
+        const isSelected = state.selectedCatchUid === fish.uid;
+        const card = document.createElement("article");
+        card.className = `catch-choice-card ${isSelected ? "is-selected" : ""}`;
+        card.style.setProperty("--choice-index", String(index));
+        card.tabIndex = 0;
+        card.innerHTML = cardTemplate(fish, "", false);
+        card.addEventListener("click", () => {
+            state.selectedCatchUid = isSelected ? null : fish.uid;
+            setStatus(state.selectedCatchUid ? "点击水族馆格子" : "选择鱼获");
             render();
         });
-        elements.decisionOptions.appendChild(discardButton);
-    }
-
-    renderReplaceOptions();
-    render();
+        elements.catchChoiceArea.appendChild(card);
+    });
 }
 
 function catchFish() {
-    if (!state.isAtSea || state.tripBait.length === 0 || state.decisionLocked) {
+    const fishCost = fishingCost();
+
+    if (state.coins < fishCost || state.decisionLocked || state.catchChoices.length > 0) {
         return;
     }
 
-    const baitId = state.tripBait.shift();
+    const baitId = baitIdForLevel(state.baitLevel);
     const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
-    runEventSystemHook("onCatchStart", { baitId, bait, period: currentPeriod() });
+    state.coins -= fishCost;
+    runEventSystemHook("onCatchStart", { baitId, bait, day: state.day });
     const choices = drawCatchChoices(baitId);
-    runEventSystemHook("onCatchChoice", { baitId, bait, choices, period: currentPeriod() });
+    runEventSystemHook("onCatchChoice", { baitId, bait, choices, day: state.day });
     state.stats.baitUsed += 1;
-    state.tripCatchCount += 1;
-    elements.lastCatch.textContent = "等待选择";
+    state.dailyCatchCount += 1;
+    state.catchChoices = choices;
+    state.catchPickLimit = catchPickLimit(baitId, bait, choices);
+    state.catchPicksRemaining = state.catchPickLimit;
+    state.selectedCatchUid = null;
+    elements.lastCatch.textContent = "等待放入";
     elements.pixelScene.classList.add("is-catching");
     setStatus("选择鱼获");
-    addLog(`消耗 1 个${bait.name}，钓上 3 条鱼，请选择 1 条带走。`);
+    addLog(`支付 ${fishCost}G 使用${bait.name}钓鱼，钓上 3 条鱼，可选择 ${state.catchPickLimit} 条放入水族馆。`);
 
     window.setTimeout(() => {
         elements.pixelScene.classList.remove("is-catching");
     }, 700);
 
-    openCatchChoiceModal(choices);
-}
-
-function returnHome() {
-    if (!state.isAtSea || state.decisionLocked) {
-        return;
-    }
-
-    const returnedBaits = state.tripBait.splice(0, Math.max(0, baitCapacity() - state.reserveBait.length));
-    const lostBaitCount = state.tripBait.length;
-    state.tripBait = [];
-    state.reserveBait.push(...returnedBaits);
-    state.isAtSea = false;
-    state.pendingTransferIndex = 0;
-    runOwnedCardsHook("onReturnHome");
-    setStatus("回家整理");
-    if (lostBaitCount > 0) {
-        addLog(`船已靠岸，库存已满，${lostBaitCount} 个未用完的饵料丢失。`);
-    } else {
-        addLog(returnedBaits.length > 0
-            ? `船已靠岸，未用完的 ${returnedBaits.length} 个饵料放回库存。`
-            : "船已靠岸，开始把背包里的鱼卡放入水族馆。");
-    }
-    processPondTransfers();
-    render();
-}
-
-function processPondTransfers() {
-    while (state.pendingTransferIndex < state.backpack.length) {
-        const fish = state.backpack[state.pendingTransferIndex];
-
-        if (canStoreCard(state.pond, effectiveCapacity("pond"), fish, "pond")) {
-            state.pond.push(fish);
-            state.backpack.splice(state.pendingTransferIndex, 1);
-            runCardHook(fish, "onEnterPond", { card: fish, reason: "returnHome" });
-            addLog(`「${fish.name}」已放入水族馆。`);
-            resolvePondCombines();
-            continue;
-        }
-
-        openPondDecision(fish, state.pendingTransferIndex);
-        return;
-    }
-
-    setStatus("在家准备");
-    addLog("回家整理完成。");
-    render();
-}
-
-function openBackpackDecision(incomingFish) {
-    state.decisionLocked = true;
-    elements.decisionModal.hidden = false;
-    elements.decisionTitle.textContent = "背包已满";
-    elements.decisionCopy.textContent = "选择一个背包鱼卡替换，或保留现有背包。未放入背包的新鱼卡会直接丢失。";
-    elements.decisionPreview.innerHTML = cardTemplate(incomingFish);
-    elements.decisionOptions.innerHTML = "";
-
-    state.backpack.forEach((fish, index) => {
-        const button = document.createElement("button");
-        const canReplace = canStoreCard(state.backpack, effectiveCapacity("backpack"), incomingFish, "backpack", index);
-        button.type = "button";
-        button.className = "decision-option";
-        button.disabled = !canReplace;
-        button.innerHTML = canReplace
-            ? `<strong>替换 ${fish.name}</strong><span>丢弃旧卡，放入 ${incomingFish.name}</span>`
-            : `<strong>无法只替换 ${fish.name}</strong><span>${incomingFish.name} 占格过大，需要更多空格</span>`;
-        button.addEventListener("click", () => {
-            if (!canReplace) {
-                return;
-            }
-
-            const removed = replaceBackpackFish(incomingFish, index);
-            closeDecision();
-            addLog(`已用「${incomingFish.name}」替换背包中的「${removed.name}」。`);
-            restoreTripStatus();
-            render();
-        });
-        elements.decisionOptions.appendChild(button);
-    });
-
-    const keepButton = document.createElement("button");
-    keepButton.type = "button";
-    keepButton.className = "decision-option decision-danger";
-    keepButton.innerHTML = `<strong>保留现有背包</strong><span>${incomingFish.name} 未入包，直接丢失</span>`;
-    keepButton.addEventListener("click", () => {
-        runCardHook(incomingFish, "onDiscard", { card: incomingFish, reason: "backpackFull" });
-        closeDecision();
-        addLog(`背包已满，「${incomingFish.name}」未能入包，已经丢失。`);
-        restoreTripStatus();
-        render();
-    });
-    elements.decisionOptions.appendChild(keepButton);
-    render();
-}
-
-function openPondDecision(fish, backpackIndex) {
-    state.decisionLocked = true;
-    elements.decisionModal.hidden = false;
-    elements.decisionTitle.textContent = "水族馆已满";
-    elements.decisionCopy.textContent = "选择一个水族馆鱼卡替换，或暂时把这张鱼继续留在背包里。";
-    elements.decisionPreview.innerHTML = cardTemplate(fish);
-    elements.decisionOptions.innerHTML = "";
-
-    state.pond.forEach((pondFish, pondIndex) => {
-        const button = document.createElement("button");
-        const canReplace = canStoreCard(state.pond, effectiveCapacity("pond"), fish, "pond", pondIndex);
-        button.type = "button";
-        button.className = "decision-option";
-        button.disabled = !canReplace;
-        button.innerHTML = canReplace
-            ? `<strong>替换 ${pondFish.name}</strong><span>${fish.name} 进入水族馆，旧鱼卡丢失</span>`
-            : `<strong>无法只替换 ${pondFish.name}</strong><span>${fish.name} 占格过大，需要更多空格</span>`;
-        button.addEventListener("click", () => {
-            if (!canReplace) {
-                return;
-            }
-
-            const removed = state.pond[pondIndex];
-            runCardHook(removed, "onReplaceOut", { card: removed, incomingCard: fish, source: "pond" });
-            runCardHook(removed, "onDiscard", { card: removed, reason: "replaceFromPond" });
-            state.pond[pondIndex] = fish;
-            state.backpack.splice(backpackIndex, 1);
-            state.stats.replaced += 1;
-            state.stats.discarded += 1;
-            runCardHook(fish, "onEnterPond", { card: fish, reason: "replace" });
-            runCardHook(fish, "onReplaceIn", { card: fish, removedCard: removed, source: "pond" });
-            closeDecision();
-            addLog(`「${fish.name}」进入水族馆，替换了「${removed.name}」。`);
-            resolvePondCombines();
-            processPondTransfers();
-        });
-        elements.decisionOptions.appendChild(button);
-    });
-
-    const keepButton = document.createElement("button");
-    keepButton.type = "button";
-    keepButton.className = "decision-option";
-    keepButton.innerHTML = `<strong>留在背包</strong><span>水族馆不变，继续占用随身背包格子</span>`;
-    keepButton.addEventListener("click", () => {
-        state.pendingTransferIndex = backpackIndex + 1;
-        closeDecision();
-        addLog(`水族馆已满，「${fish.name}」暂时留在背包。`);
-        processPondTransfers();
-    });
-    elements.decisionOptions.appendChild(keepButton);
     render();
 }
 
@@ -1184,48 +913,8 @@ function closeDecision() {
     elements.decisionOptions.classList.remove("catch-replace-grid");
 }
 
-function nextTimeLabel() {
-    const period = currentPeriod();
-
-    if (period.id === "morning") {
-        return "进入下午";
-    }
-
-    if (period.id === "afternoon" && state.nightUnlocked) {
-        return "进入晚上";
-    }
-
-    return "进入明天";
-}
-
 function advanceTime() {
-    if (!state.gameStarted || state.isAtSea || state.decisionLocked) {
-        return;
-    }
-
-    const period = currentPeriod();
-
-    if (period.id === "morning") {
-        runEventSystemHook("onPeriodEnd", { period });
-        state.periodIndex = 1;
-        runEventSystemHook("onPeriodStart", { period: currentPeriod() });
-        setStatus("下午准备");
-        addLog("时间推进到下午，获得第二次常规出海机会。");
-        render();
-        return;
-    }
-
-    if (period.id === "afternoon") {
-        runOwnedCardsHook("onPeriodEnd", { period });
-        runEventSystemHook("onPeriodEnd", { period });
-    }
-
-    if (period.id === "afternoon" && state.nightUnlocked) {
-        state.periodIndex = 2;
-        runEventSystemHook("onPeriodStart", { period: currentPeriod() });
-        setStatus("夜航准备");
-        addLog("夜航条件已满足，晚上可以额外出海一次。");
-        render();
+    if (!state.gameStarted || state.decisionLocked || state.catchChoices.length > 0) {
         return;
     }
 
@@ -1299,58 +988,16 @@ function openCheckpointDecision() {
 
 function completeDayAdvance() {
     state.day += 1;
-    state.periodIndex = 0;
-    state.usedPeriods = {
-        morning: false,
-        afternoon: false,
-        night: false
-    };
-    state.nightUnlocked = false;
+    state.dailyCatchCount = 0;
+    clearCatchChoices();
     growCardValuesForNewDay();
     runOwnedCardsHook("onDayStart");
     runEventSystemHook("onDayStart");
-    if (state.pendingBaitSaleGold > 0) {
-        state.coins += state.pendingBaitSaleGold;
-        addLog(`昨日卖出的饵料结算，获得 ${state.pendingBaitSaleGold}G。`);
-        state.pendingBaitSaleGold = 0;
-    }
-
-    const dailyBaitId = baitIdForLevel(state.baitLevel);
-    const dailyBait = DATA.baitTypes[dailyBaitId] || DATA.baitTypes.basic;
-    const expectedDailyBait = dailyBaitGain();
-    const addedDailyBait = addBaitToReserve(dailyBaitId, expectedDailyBait);
     setStatus("新的一天");
-    addLog(`第 ${state.day} 天开始，上午出海机会已刷新，自动获得 ${addedDailyBait}/${expectedDailyBait} 个${dailyBait.name}。`);
+    addLog(`第 ${state.day} 天开始，当前钓鱼费用 ${fishingCost()}G。`);
     if (isCheckpointEve()) {
         addLog(`结算提醒：明天结束需要水族馆总价值达到 ${nextCheckpointTarget()}，当前为 ${pondTotalValue()}。`);
     }
-    render();
-}
-
-function buyBait() {
-    const baitId = baitIdForLevel(state.baitLevel);
-    const cost = baitPurchaseCost();
-
-    if (state.isAtSea || state.coins < cost || state.reserveBait.length >= baitCapacity()) {
-        return;
-    }
-
-    state.coins -= cost;
-    addBaitToReserve(baitId, 1);
-    addLog(`购买 1 个${DATA.baitTypes[baitId].name}，会加入下次出海补给。`);
-    render();
-}
-
-function sellBait() {
-    if (state.isAtSea || state.decisionLocked || state.reserveBait.length === 0) {
-        return;
-    }
-
-    const baitId = state.reserveBait.pop();
-    const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
-    const value = baitSellValue(baitId);
-    state.pendingBaitSaleGold += value;
-    addLog(`寄售 1 个${bait.name}，明天开始时结算 ${value}G。`);
     render();
 }
 
@@ -1386,13 +1033,10 @@ function openPondUpgradeAtDayEnd() {
 
 function openCoreUpgrade() {
     const cost = coreUpgradeCost();
-    const cells = storageCells("backpack");
-    const nextCellIndex = cells.findIndex((enabled) => !enabled);
     const maxBaitLevel = DATA.baitLevelOrder?.length || 6;
 
     if (
-        state.isAtSea
-        || state.decisionLocked
+        state.decisionLocked
         || state.coins < cost
         || state.baitLevel >= maxBaitLevel
     ) {
@@ -1400,14 +1044,8 @@ function openCoreUpgrade() {
     }
 
     state.coins -= cost;
-    if (nextCellIndex >= 0) {
-        cells[nextCellIndex] = true;
-    }
-
     state.baitLevel = Math.min(maxBaitLevel, state.baitLevel + 1);
-    addLog(nextCellIndex >= 0
-        ? `补给升级：背包自动解锁第 ${nextCellIndex + 1} 格，饵料等级提升到 Lv.${state.baitLevel}。`
-        : `补给升级：饵料等级提升到 Lv.${state.baitLevel}。`);
+    addLog(`饵料升级：之后购买和每日获得的饵料提升到 Lv.${state.baitLevel}。`);
     render();
 }
 
@@ -1456,7 +1094,8 @@ function createCombinedCard(group) {
         effects: Array.isArray(baseCard.effects) ? baseCard.effects.map((effect) => ({ ...effect })) : [],
         uid: `${baseCard.id}-star-${group.star + 1}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         star: group.star + 1,
-        value: sourceCards.reduce((sum, card) => sum + (card.value || 0), 0)
+        value: sourceCards.reduce((sum, card) => sum + (card.value || 0), 0),
+        cellIndex: sourceCards[0].cellIndex
     };
 }
 
@@ -1502,7 +1141,7 @@ function resolvePondCombines() {
 }
 
 function sellFish(source, index) {
-    if (state.isAtSea || state.decisionLocked) {
+    if (state.decisionLocked || state.sellingCardUid) {
         return;
     }
 
@@ -1527,21 +1166,54 @@ function sellFish(source, index) {
         return;
     }
 
-    collection.splice(index, 1);
+    const soldUid = fish.uid;
     state.selectedCard = null;
-    state.coins += sale.value;
-    state.stats.soldFish += 1;
-    runCardHook(fish, "onSell", { card: fish, sale });
-    runOwnedCardsHook("onSell", { card: fish, sale });
-    addLog(`卖出「${fish.name}」，获得 ${sale.value}G。`);
+    state.sellingCardUid = soldUid;
+    state.decisionLocked = true;
+    elements.shopPanel.classList.add("is-sale-pulse");
     render();
+
+    window.setTimeout(() => {
+        const currentCollection = storageCards(source);
+        const currentIndex = currentCollection.findIndex((card) => card.uid === soldUid);
+
+        if (currentIndex >= 0) {
+            currentCollection.splice(currentIndex, 1);
+            state.coins += sale.value;
+            state.stats.soldFish += 1;
+            runCardHook(fish, "onSell", { card: fish, sale });
+            runOwnedCardsHook("onSell", { card: fish, sale });
+            addLog(`卖出「${fish.name}」，获得 ${sale.value}G。`);
+        }
+
+        state.sellingCardUid = null;
+        state.decisionLocked = false;
+        elements.shopPanel.classList.remove("is-sale-pulse");
+        render();
+    }, 180);
 }
 
 function handleCardClick(event, storage) {
     const action = event.target.closest(".card-action");
-    const slot = event.target.closest(".slot[data-card-index]");
+    const slot = event.target.closest(".slot");
 
     if (!slot || state.decisionLocked) {
+        return;
+    }
+
+    if (storage === "pond" && state.selectedCatchUid) {
+        const fish = state.catchChoices.find((choice) => choice.uid === state.selectedCatchUid);
+        const cellIndex = Number(slot.dataset.cellIndex);
+
+        if (fish && Number.isFinite(cellIndex) && placeFishInPond(fish, cellIndex)) {
+            elements.lastCatch.textContent = fish.name;
+            finishCatchPick(fish);
+            render();
+        }
+        return;
+    }
+
+    if (!slot.dataset.cardIndex) {
         return;
     }
 
@@ -1553,10 +1225,6 @@ function handleCardClick(event, storage) {
     }
 
     if (action) {
-        if (state.isAtSea) {
-            return;
-        }
-
         sellFish(storage, index);
         return;
     }
@@ -1575,7 +1243,7 @@ function handleCardClick(event, storage) {
 }
 
 function moveCard(source, sourceIndex, target, targetIndex) {
-    if (state.isAtSea || state.decisionLocked) {
+    if (state.decisionLocked) {
         return;
     }
 
@@ -1623,7 +1291,7 @@ function moveCard(source, sourceIndex, target, targetIndex) {
 function handleDragStart(event) {
     const slot = event.target.closest(".slot[data-card-index]");
 
-    if (!slot || state.isAtSea || state.decisionLocked) {
+    if (!slot || state.decisionLocked) {
         event.preventDefault();
         return;
     }
@@ -1740,16 +1408,12 @@ function resetGame(modeId = "standard", startImmediately = true, characterId = s
     render();
 
     if (startImmediately) {
-        addLog(`${currentMode().name}开始：${activeCharacter().name} 登船，每三天检查一次水族馆总价值。`);
+        addLog(`${currentMode().name}开始：${activeCharacter().name} 开始经营水族馆，每三天检查一次总价值。`);
     }
 }
 
-elements.startTripButton.addEventListener("click", startTrip);
 elements.fishButton.addEventListener("click", catchFish);
-elements.returnHomeButton.addEventListener("click", returnHome);
 elements.advanceTimeButton.addEventListener("click", advanceTime);
-elements.buyBaitButton.addEventListener("click", buyBait);
-elements.sellBaitButton.addEventListener("click", sellBait);
 elements.upgradeCoreButton.addEventListener("click", openCoreUpgrade);
 elements.startGameButton.addEventListener("click", () => resetGame(state.modeId, true, state.characterId));
 elements.modeButtons.forEach((button) => {
@@ -1758,10 +1422,9 @@ elements.modeButtons.forEach((button) => {
 elements.characterButtons.forEach((button) => {
     button.addEventListener("click", () => setSelectedCharacter(button.dataset.characterId));
 });
-bindStorageDrag(elements.backpackGrid, "backpack");
 bindStorageDrag(elements.pondGrid, "pond");
 elements.shopPanel.addEventListener("dragover", (event) => {
-    if (state.dragData && !state.isAtSea && !state.decisionLocked) {
+    if (state.dragData && !state.decisionLocked) {
         event.preventDefault();
         elements.shopPanel.classList.add("is-drop-target");
     }
@@ -1774,4 +1437,4 @@ elements.shopPanel.addEventListener("drop", handleShopDrop);
 setSelectedMode(state.modeId);
 setSelectedCharacter(state.characterId);
 render();
-addLog("原型已切换为单屏鱼卡桌面：拖动鱼卡可排序，拖到商店出售。");
+addLog("原型已切换为按天钓鱼：鱼获直接选择水族馆格子放入。");

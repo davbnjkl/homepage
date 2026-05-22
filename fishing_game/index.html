@@ -26,14 +26,14 @@
                 <div class="character-preview-copy">
                     <strong id="characterPreviewName">阿潮</strong>
                     <span id="characterPreviewTitle">稳潮钓手</span>
-                    <p id="characterPreviewPassive">每天开始时额外获得 1 个当前等级饵料。</p>
+                    <p id="characterPreviewPassive">每天开始时获得 1G。</p>
                 </div>
             </div>
             <div class="character-list" role="group" aria-label="角色选择">
                 <button class="character-card is-selected" type="button" data-character-id="tide">
                     <span class="character-avatar">潮</span>
                     <strong>阿潮</strong>
-                    <small>每天额外获得 1 个当前等级饵料。</small>
+                    <small>每天开始时获得金币。</small>
                 </button>
                 <button class="character-card" type="button" data-character-id="hookGranny">
                     <span class="character-avatar">婆</span>
@@ -43,7 +43,7 @@
                 <button class="character-card" type="button" data-character-id="starLantern">
                     <span class="character-avatar">星</span>
                     <strong>星灯少年</strong>
-                    <small>下午结束概率开夜航，夜航首钓更容易出高品质。</small>
+                    <small>每天第一次钓鱼更容易出高品质。</small>
                 </button>
                 <button class="character-card" type="button" data-character-id="tankSmith">
                     <span class="character-avatar">洛</span>
@@ -53,8 +53,8 @@
             </div>
             <div class="tutorial-note">
                 <strong>新手目标</strong>
-                <p>每天上午和下午可以出海，消耗饵料捕鱼。每次钓上 3 张鱼卡，点卡查看效果并选 1 张带走。</p>
-                <p>回家后鱼卡会进入水族馆。水族馆里的鱼每天增加价值，3 张同名同星鱼会自动合成。</p>
+                <p>每天花费金币捕鱼。每次钓鱼会钓上 3 张鱼卡，点卡查看效果，再选择鱼卡放入水族馆格子。</p>
+                <p>水族馆里的鱼每天增加价值，3 张同名同星鱼会自动合成。特殊鱼卡后续可以改变可选鱼获数量和放置规则。</p>
                 <p>每 3 天结束会检查水族馆总价值，达到目标才能继续本轮。</p>
             </div>
             <button id="startGameButton" type="button" class="pixel-button pixel-button-accent main-start-button">开始游戏</button>
@@ -64,9 +64,9 @@
     <div class="page-shell">
         <header class="topbar pixel-panel">
             <div class="brand-block">
-                <p class="eyebrow">ROGUELIKE FISH CARDS / VOYAGE PROTOTYPE</p>
+                <p class="eyebrow">ROGUELIKE FISH CARDS / AQUARIUM PROTOTYPE</p>
                 <h1>大钓鱼鱼</h1>
-                <p class="subtitle">每日分上午、下午出海，特殊情况下可开启夜航。饵料决定捕鱼次数，鱼卡效果改写规则。</p>
+                <p class="subtitle">按天经营水族馆。消耗饵料钓鱼，直接选择鱼获放入水族馆位置，鱼卡效果改写规则。</p>
             </div>
             <div class="status-strip" aria-label="游戏状态">
                 <div class="status-chip">
@@ -74,16 +74,8 @@
                     <strong>第 <span id="dayValue">1</span> 天</strong>
                 </div>
                 <div class="status-chip">
-                    <span class="chip-label">时段</span>
-                    <strong id="periodValue">上午</strong>
-                </div>
-                <div class="status-chip">
                     <span class="chip-label">金币</span>
                     <strong><span id="coinValue">0</span> G</strong>
-                </div>
-                <div class="status-chip">
-                    <span class="chip-label">背包</span>
-                    <strong><span id="bagCount">0</span>/<span id="bagMax">3</span></strong>
                 </div>
                 <div class="status-chip">
                     <span class="chip-label">水族馆</span>
@@ -106,12 +98,12 @@
                     <div class="scene-header panel-heading">
                         <div>
                             <p class="panel-kicker">SCENE VIEW</p>
-                            <h2>出海场景</h2>
+                            <h2>水族馆场景</h2>
                         </div>
                         <div class="scene-badges">
-                            <span class="mini-chip">每日两航</span>
+                            <span class="mini-chip">按天推进</span>
                             <span class="mini-chip">鱼卡构筑</span>
-                            <span class="mini-chip">可替换</span>
+                            <span class="mini-chip">格位放置</span>
                         </div>
                     </div>
 
@@ -142,38 +134,31 @@
                 </section>
 
                 <section class="control-grid">
-                    <section class="voyage-panel pixel-panel">
+                    <section class="voyage-panel pixel-panel fishing-panel">
                         <div class="panel-heading">
                             <div>
-                                <p class="panel-kicker">VOYAGE LOOP</p>
-                                <h2>出海捕鱼</h2>
+                                <p class="panel-kicker">DAILY FISHING</p>
+                                <h2>今日捕鱼</h2>
                             </div>
                         </div>
 
                         <div class="meter-group">
                             <div class="meter-row">
-                                <span id="baitScopeLabel">库存饵料</span>
-                                <strong><span id="baitCount">0</span><span id="baitLimit">/10</span></strong>
+                                <span id="baitScopeLabel">当前饵料</span>
+                                <strong><span id="baitCount">Lv.1</span><span id="baitLimit"></span></strong>
                             </div>
-                            <div class="bait-rack" id="baitRack" aria-label="本次出海饵料"></div>
+                            <div class="bait-rack" id="baitRack" aria-label="当前饵料"></div>
                         </div>
 
                         <div class="resource-grid">
                             <div class="footer-card">
-                                <span class="footer-label">基础补给</span>
-                                <strong>每次出海 +3 白色饵料</strong>
+                                <span class="footer-label">每日补给</span>
+                                <strong>新一天自动获得饵料</strong>
                             </div>
                             <div class="footer-card footer-card-highlight">
                                 <span class="footer-label">最近获得</span>
                                 <strong id="lastCatch">暂无鱼卡</strong>
                             </div>
-                        </div>
-
-                        <div class="action-row">
-                            <button id="startTripButton" type="button" class="pixel-button">开始出海</button>
-                            <button id="fishButton" type="button" class="pixel-button pixel-button-accent">消耗饵料捕鱼</button>
-                            <button id="returnHomeButton" type="button" class="pixel-button pixel-button-muted">回家入塘</button>
-                            <button id="advanceTimeButton" type="button" class="pixel-button">推进时间</button>
                         </div>
                     </section>
 
@@ -195,16 +180,8 @@
                         <p class="panel-kicker">CARD STORAGE</p>
                         <h2>鱼卡仓储</h2>
                     </div>
-                    <p class="inventory-note">拖动鱼卡调整顺序，拖到商店直接出售。</p>
+                    <p class="inventory-note">点击鱼卡查看效果，点出售卖鱼；钓到鱼后点击格子放入或替换。</p>
                 </div>
-
-                <section class="storage-section backpack-section">
-                    <div class="section-title-row">
-                        <h3>随身背包</h3>
-                        <span><span id="bagCountSmall">0</span>/<span id="bagMaxSmall">3</span></span>
-                    </div>
-                    <div class="inventory-grid storage-grid" id="backpackGrid" aria-label="随身背包"></div>
-                </section>
 
                 <section class="storage-section pond-section">
                     <div class="section-title-row">
@@ -214,15 +191,23 @@
                     <div class="inventory-grid storage-grid pond-grid" id="pondGrid" aria-label="水族馆"></div>
                 </section>
 
+                <section class="catch-select-panel">
+                    <div class="section-title-row">
+                        <h3>本次鱼获</h3>
+                        <span>选鱼后点水族馆格子</span>
+                    </div>
+                    <div class="catch-choice-area" id="catchChoiceArea" aria-live="polite"></div>
+                </section>
+
                 <section class="shop-panel">
                     <div class="section-title-row">
-                        <h3>商店</h3>
-                        <span>买卖饵料 / 升级补给</span>
+                        <h3>操作</h3>
+                        <span>钓鱼 / 升级 / 结算</span>
                     </div>
                     <div class="shop-grid">
-                        <button id="buyBaitButton" type="button" class="pixel-button">买饵料 5G</button>
-                        <button id="sellBaitButton" type="button" class="pixel-button pixel-button-muted">卖饵料</button>
-                        <button id="upgradeCoreButton" type="button" class="pixel-button pixel-button-accent">升级补给</button>
+                        <button id="fishButton" type="button" class="pixel-button pixel-button-accent">钓鱼 2G</button>
+                        <button id="advanceTimeButton" type="button" class="pixel-button">结束今天</button>
+                        <button id="upgradeCoreButton" type="button" class="pixel-button pixel-button-accent">升级饵料</button>
                     </div>
                 </section>
             </aside>
