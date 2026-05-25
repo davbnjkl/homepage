@@ -51,7 +51,9 @@ const STORAGE = {
     }
 };
 
-const INITIAL_COINS = 6;
+const INITIAL_COINS = 2;
+const BASE_DAILY_COINS = 4;
+const BASE_FISHING_COST = 3;
 
 function createInitialState(modeId = "standard", gameStarted = false, characterId = "tide") {
     return {
@@ -125,6 +127,32 @@ function activeCharacter() {
     };
 }
 
+function cardStar(card) {
+    return Math.max(1, Math.min(3, Math.floor(card?.star || 1)));
+}
+
+function isCardArchetype(card, archetype) {
+    return Boolean(card && archetype && card.archetype === archetype);
+}
+
+function pondCardsByArchetype(archetype, options = {}) {
+    return state.pond.filter((card) => {
+        if (!isCardArchetype(card, archetype)) {
+            return false;
+        }
+
+        if (options.excludeUid && card.uid === options.excludeUid) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+function countPondCardsByArchetype(archetype, options = {}) {
+    return pondCardsByArchetype(archetype, options).length;
+}
+
 function activeEventSources() {
     if (!DATA.eventSystem?.enabled || !Array.isArray(state.activeEvents)) {
         return [];
@@ -168,12 +196,68 @@ function addLog(message) {
     }
 }
 
+function dailyCounter(card, key) {
+    if (!card.dailyCounters || card.dailyCounterDay !== state.day) {
+        card.dailyCounters = {};
+        card.dailyCounterDay = state.day;
+    }
+
+    return card.dailyCounters[key] || 0;
+}
+
+function incrementDailyCounter(card, key, amount = 1) {
+    if (!card.dailyCounters || card.dailyCounterDay !== state.day) {
+        card.dailyCounters = {};
+        card.dailyCounterDay = state.day;
+    }
+
+    card.dailyCounters[key] = (card.dailyCounters[key] || 0) + amount;
+    return card.dailyCounters[key];
+}
+
+function resetDailyCardState() {
+    ownedCards().forEach((card) => {
+        card.valueGainedToday = 0;
+        card.dailyCounters = {};
+        card.dailyCounterDay = state.day;
+    });
+}
+
+function addValueToCard(card, amount, options = {}) {
+    const gain = Math.max(0, Math.floor(amount));
+
+    if (!card || gain <= 0) {
+        return 0;
+    }
+
+    card.value = (card.value || 0) + gain;
+    card.valueGainedToday = (card.valueGainedToday || 0) + gain;
+
+    if (options.message) {
+        addLog(options.message);
+    }
+
+    if (options.triggerGain !== false) {
+        runOwnedCardsHook("onCardValueGain", {
+            gainedCard: card,
+            amount: gain,
+            sourceCard: options.sourceCard || null,
+            reason: options.reason || ""
+        });
+    }
+
+    return gain;
+}
+
 function createFishInstance(template, baitId) {
     return {
         ...template,
+        tags: Array.isArray(template.tags) ? [...template.tags] : [],
         effects: Array.isArray(template.effects) ? template.effects.map((effect) => ({ ...effect })) : [],
         star: 1,
         value: template.baseValue || 1,
+        valueGainedToday: 0,
+        dailyCounters: {},
         uid: `${template.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         baitId
     };
@@ -210,6 +294,16 @@ function effectContext(extra = {}) {
         fishCardValue,
         ownedCards,
         activeCharacter,
+        cardStar,
+        isCardArchetype,
+        pondCardsByArchetype,
+        countPondCardsByArchetype,
+        adjacentPondCards,
+        hasAdjacentEmptyPondCell,
+        isPondFull,
+        dailyCounter,
+        incrementDailyCounter,
+        addValueToCard,
         ...extra
     };
 }
@@ -314,7 +408,7 @@ function fishSellValue(fish) {
 }
 
 function dailyValueGain(card) {
-    const baseGain = card.star || 1;
+    const baseGain = (card.dailyGain || 1) * (card.star || 1);
     const gain = EFFECTS.modifyNumberWithCards(
         cardsForTargetModifiers(card),
         "modifyDailyValueGain",
@@ -449,17 +543,43 @@ function fishingCost() {
     const cost = EFFECTS.modifyNumberWithCards(
         effectSources(),
         "modifyFishingCost",
-        2,
+        BASE_FISHING_COST,
         effectContext({ baitId })
     );
 
     return Math.max(0, Math.floor(cost));
 }
 
+function baseDailyCoinsForDay(day = state.day) {
+    return BASE_DAILY_COINS + Math.floor(Math.max(0, day - 1) / 3);
+}
+
+function gainBaseDailyCoins() {
+    const dailyCoins = baseDailyCoinsForDay();
+
+    if (dailyCoins <= 0) {
+        return;
+    }
+
+    state.coins += dailyCoins;
+    addLog(`每日收入：获得 ${dailyCoins}G。`);
+}
+
+function startCurrentDay(options = {}) {
+    gainBaseDailyCoins();
+
+    if (options.growCards !== false) {
+        growCardValuesForNewDay();
+    }
+
+    runOwnedCardsHook("onDayStart");
+    runEventSystemHook("onDayStart");
+}
+
 function growCardValuesForNewDay() {
     ownedCards().forEach((card) => {
         const gain = dailyValueGain(card);
-        card.value = (card.value || 0) + gain;
+        addValueToCard(card, gain, { reason: "daily", sourceCard: card });
         runCardHook(card, "onDayValueGain", { card, gain });
     });
 }
@@ -528,6 +648,92 @@ function pondOccupancy(skipUid = null) {
     });
 
     return occupied;
+}
+
+function cardOccupiedCells(card) {
+    if (!card) {
+        return [];
+    }
+
+    const start = Number.isFinite(card.cellIndex)
+        ? card.cellIndex
+        : state.pond.findIndex((entry) => entry.uid === card.uid);
+    const size = Math.max(1, Math.floor(card.slotSize || 1));
+
+    if (start < 0) {
+        return [];
+    }
+
+    return Array.from({ length: size }, (_, offset) => start + offset)
+        .filter((cellIndex) => cellIndex >= 0 && cellIndex < storageGridSize("pond"));
+}
+
+function adjacentCellIndexes(card) {
+    const selfCells = cardOccupiedCells(card);
+    const selfCellSet = new Set(selfCells);
+    const neighbors = new Set();
+
+    selfCells.forEach((cellIndex) => {
+        const row = Math.floor(cellIndex / 3);
+        const column = cellIndex % 3;
+        const candidates = [
+            { row: row - 1, column },
+            { row: row + 1, column },
+            { row, column: column - 1 },
+            { row, column: column + 1 }
+        ];
+
+        candidates.forEach((candidate) => {
+            if (
+                candidate.row < 0
+                || candidate.row >= 3
+                || candidate.column < 0
+                || candidate.column >= 3
+            ) {
+                return;
+            }
+
+            const targetIndex = candidate.row * 3 + candidate.column;
+
+            if (!selfCellSet.has(targetIndex)) {
+                neighbors.add(targetIndex);
+            }
+        });
+    });
+
+    return [...neighbors];
+}
+
+function adjacentPondCards(card) {
+    const occupied = pondOccupancy(card?.uid);
+    const cards = new Map();
+
+    adjacentCellIndexes(card).forEach((cellIndex) => {
+        const entry = occupied.get(cellIndex);
+
+        if (entry?.card) {
+            cards.set(entry.card.uid, entry.card);
+        }
+    });
+
+    return [...cards.values()];
+}
+
+function hasAdjacentEmptyPondCell(card) {
+    const cells = storageCells("pond");
+    const occupied = pondOccupancy(card?.uid);
+
+    return adjacentCellIndexes(card).some((cellIndex) => cells[cellIndex] && !occupied.has(cellIndex));
+}
+
+function isPondFull() {
+    const occupiedCells = new Set();
+
+    state.pond.forEach((card) => {
+        cardOccupiedCells(card).forEach((cellIndex) => occupiedCells.add(cellIndex));
+    });
+
+    return storageCells("pond").every((enabled, index) => !enabled || occupiedCells.has(index));
 }
 
 function canPlacePondAt(card, cellIndex, replaceUid = null) {
@@ -739,7 +945,21 @@ function upgradeCost(storage) {
 }
 
 function coreUpgradeCost() {
-    return 5 + state.baitLevel;
+    const baseCost = 5 + state.baitLevel;
+    const threeDayDiscount = Math.floor(Math.max(0, state.day - 1) / 3);
+    const discountedCost = Math.max(0, baseCost - threeDayDiscount);
+    const modifiedCost = EFFECTS.modifyNumberWithCards(
+        effectSources(),
+        "modifyCoreUpgradeCost",
+        discountedCost,
+        effectContext({
+            baseCost,
+            threeDayDiscount,
+            baitLevel: state.baitLevel
+        })
+    );
+
+    return Math.max(0, Math.floor(modifiedCost));
 }
 
 function canUsePondUpgradeToday() {
@@ -840,7 +1060,7 @@ function placeFishInPond(fish, cellIndex) {
     state.pond.push(fish);
     state.pond.sort((left, right) => (left.cellIndex || 0) - (right.cellIndex || 0));
     state.stats.caught += 1;
-    runCardHook(fish, "onEnterPond", { card: fish, reason: target ? "replace" : "catch" });
+    runOwnedCardsHook("onEnterPond", { card: fish, enteringCard: fish, reason: target ? "replace" : "catch" });
     runCardHook(fish, "onStoredAfterCatch", { caughtFish: fish, targetStorage: "pond" });
     state.placementHighlightUid = fish.uid;
     window.setTimeout(() => {
@@ -1020,10 +1240,9 @@ function openCheckpointDecision() {
 function completeDayAdvance() {
     state.day += 1;
     state.dailyCatchCount = 0;
+    resetDailyCardState();
     clearCatchChoices();
-    growCardValuesForNewDay();
-    runOwnedCardsHook("onDayStart");
-    runEventSystemHook("onDayStart");
+    startCurrentDay();
     setStatus("新的一天");
     addLog(`第 ${state.day} 天开始，当前钓鱼费用 ${fishingCost()}G。`);
     if (isCheckpointEve()) {
@@ -1126,6 +1345,8 @@ function createCombinedCard(group) {
         uid: `${baseCard.id}-star-${group.star + 1}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         star: group.star + 1,
         value: sourceCards.reduce((sum, card) => sum + (card.value || 0), 0),
+        valueGainedToday: 0,
+        dailyCounters: {},
         cellIndex: sourceCards[0].cellIndex
     };
 }
@@ -1311,7 +1532,7 @@ function moveCard(source, sourceIndex, target, targetIndex) {
     toCards.splice(insertAt, 0, card);
 
     if (target === "pond") {
-        runCardHook(card, "onEnterPond", { card, reason: "manualMove" });
+        runOwnedCardsHook("onEnterPond", { card, enteringCard: card, reason: "manualMove" });
         resolvePondCombines();
     }
 
@@ -1440,6 +1661,9 @@ function resetGame(modeId = "standard", startImmediately = true, characterId = s
 
     if (startImmediately) {
         addLog(`${currentMode().name}开始：${activeCharacter().name} 开始经营水族馆，每三天检查一次总价值。`);
+        startCurrentDay({ growCards: false });
+        addLog(`第 ${state.day} 天开始，当前钓鱼费用 ${fishingCost()}G。`);
+        render();
     }
 }
 
