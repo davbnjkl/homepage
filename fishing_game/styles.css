@@ -205,6 +205,171 @@
     }
 }
 
+/* Final interaction-safe layout fixes */
+.main-menu {
+    place-items: start center;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.main-menu-inner {
+    padding-block: 10px 22px;
+}
+
+@media (min-width: 761px) {
+    .main-menu-inner {
+        width: min(560px, 100%);
+    }
+
+    .character-preview {
+        min-height: 132px;
+        grid-template-columns: 104px minmax(0, 1fr);
+    }
+
+    .character-preview-art {
+        min-height: 112px;
+    }
+
+    .tutorial-note p {
+        font-size: 0.8rem;
+        line-height: 1.22;
+    }
+}
+
+@media (max-width: 760px) {
+    body {
+        height: 100svh;
+        overflow: hidden;
+    }
+
+    .page-shell {
+        height: 100svh;
+        padding: 6px;
+        overflow: hidden;
+    }
+
+    .topbar {
+        top: 5px;
+    }
+
+    .status-strip {
+        gap: 4px;
+    }
+
+    .chip-label {
+        font-size: 0.42rem;
+    }
+
+    .status-chip strong {
+        font-size: 0.66rem;
+    }
+
+    .layout {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .storage-panel {
+        min-height: 0;
+        height: 100%;
+        padding: 52px 4px 58px;
+        overflow: hidden;
+    }
+
+    .storage-panel > .panel-heading,
+    .inventory-head {
+        display: none;
+    }
+
+    .pond-section {
+        min-height: 0;
+    }
+
+    .pond-section .section-title-row,
+    .catch-select-panel .section-title-row,
+    .shop-panel .section-title-row {
+        margin-bottom: 3px;
+    }
+
+    .section-title-row h3 {
+        font-size: 0.82rem;
+        line-height: 1;
+    }
+
+    .section-title-row span {
+        font-size: 0.68rem;
+        line-height: 1;
+    }
+
+    .pond-grid {
+        min-height: 0;
+        height: min(46svh, 330px);
+        grid-auto-rows: minmax(0, 1fr);
+        gap: 4px;
+    }
+
+    .slot {
+        min-height: 0;
+        padding: 3px;
+    }
+
+    .slot-empty {
+        min-height: 0;
+    }
+
+    .catch-select-panel {
+        padding: 5px;
+        gap: 4px;
+    }
+
+    .catch-choice-area {
+        min-height: 0;
+        height: 96px;
+        max-height: 96px;
+        gap: 4px;
+    }
+
+    .catch-choice-empty {
+        min-height: 72px;
+        padding: 6px;
+    }
+
+    .catch-choice-card .fish-card {
+        min-height: 88px;
+        height: 88px;
+    }
+
+    .catch-choice-card .fish-sprite {
+        height: 36px;
+        min-height: 30px;
+    }
+
+    .shop-panel {
+        position: fixed;
+        z-index: 30;
+        left: 50%;
+        right: auto;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: min(420px, calc(100vw - 12px));
+        transform: translateX(-50%);
+        padding: 0;
+        pointer-events: auto;
+    }
+
+    .shop-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .shop-grid .pixel-button {
+        min-height: 42px;
+        padding: 5px 4px;
+        font-size: 0.7rem;
+        line-height: 1.05;
+    }
+}
+
 /* Last-pass placement constraints for aquarium / catch / bottom actions */
 .catch-choice-area {
     min-height: 104px;
