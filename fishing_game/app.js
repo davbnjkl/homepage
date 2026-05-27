@@ -90,6 +90,7 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
         combineHighlightUid: null,
         placementHighlightUid: null,
         sellingCardUid: null,
+        valueAnimations: {},
         charge: {
             isCharging: false,
             startedAt: 0,
@@ -107,6 +108,9 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
         }
     };
 }
+
+const valueAnimationTimers = new Map();
+const valueAnimationIntervals = new Map();
 
 const state = createInitialState("standard", false);
 
@@ -248,8 +252,10 @@ function addValueToCard(card, amount, options = {}) {
         return 0;
     }
 
+    const startValue = card.value || 0;
     card.value = (card.value || 0) + gain;
     card.valueGainedToday = (card.valueGainedToday || 0) + gain;
+    queueValueAnimation(card, gain, startValue, card.value);
 
     if (options.message) {
         addLog(options.message);
@@ -265,6 +271,94 @@ function addValueToCard(card, amount, options = {}) {
     }
 
     return gain;
+}
+
+function valueAnimationDuration(gain) {
+    return Math.min(1500, 180 + Math.max(1, gain) * 70);
+}
+
+function valueAnimationDisplayValue(startValue, finalValue, elapsed, duration) {
+    const progress = Math.min(1, elapsed / Math.max(1, duration));
+
+    if (progress >= 0.88) {
+        return finalValue;
+    }
+
+    const range = Math.max(4, finalValue - startValue + 5);
+    const base = startValue + Math.floor((finalValue - startValue) * progress);
+    const jitter = Math.floor(Math.random() * range);
+
+    return Math.max(0, Math.min(finalValue + range, base + jitter));
+}
+
+function updateValueAnimationDisplay(uid, value) {
+    document.querySelectorAll(".fish-card").forEach((cardElement) => {
+        if (cardElement.dataset.cardUid !== uid) {
+            return;
+        }
+
+        const valueNumber = cardElement.querySelector(".fish-value-number");
+        if (valueNumber) {
+            valueNumber.textContent = value;
+        }
+    });
+}
+
+function queueValueAnimation(card, gain, startValue, finalValue) {
+    if (!card?.uid || !state.valueAnimations) {
+        return;
+    }
+
+    const previous = state.valueAnimations[card.uid];
+    const totalGain = (previous?.gain || 0) + gain;
+    const animationStartValue = previous?.startValue ?? startValue;
+    const duration = valueAnimationDuration(totalGain);
+    const startedAt = Date.now();
+
+    state.valueAnimations[card.uid] = {
+        gain: totalGain,
+        startValue: animationStartValue,
+        finalValue,
+        displayValue: animationStartValue,
+        duration,
+        startedAt,
+        until: startedAt + duration
+    };
+
+    if (valueAnimationTimers.has(card.uid)) {
+        window.clearTimeout(valueAnimationTimers.get(card.uid));
+    }
+
+    if (valueAnimationIntervals.has(card.uid)) {
+        window.clearInterval(valueAnimationIntervals.get(card.uid));
+    }
+
+    valueAnimationIntervals.set(card.uid, window.setInterval(() => {
+        const animation = state.valueAnimations?.[card.uid];
+
+        if (!animation) {
+            window.clearInterval(valueAnimationIntervals.get(card.uid));
+            valueAnimationIntervals.delete(card.uid);
+            return;
+        }
+
+        const elapsed = Date.now() - animation.startedAt;
+        animation.displayValue = valueAnimationDisplayValue(animation.startValue, animation.finalValue, elapsed, animation.duration);
+        updateValueAnimationDisplay(card.uid, animation.displayValue);
+    }, 55));
+
+    valueAnimationTimers.set(card.uid, window.setTimeout(() => {
+        if (state.valueAnimations?.[card.uid]?.until <= Date.now()) {
+            if (valueAnimationIntervals.has(card.uid)) {
+                window.clearInterval(valueAnimationIntervals.get(card.uid));
+                valueAnimationIntervals.delete(card.uid);
+            }
+            updateValueAnimationDisplay(card.uid, state.valueAnimations[card.uid].finalValue);
+            delete state.valueAnimations[card.uid];
+            valueAnimationTimers.delete(card.uid);
+            render();
+        }
+    }, duration + 40));
 }
 
 function createFishInstance(template, baitId) {
@@ -883,15 +977,21 @@ function cardTemplate(fish, controls = "", expanded = false, options = {}) {
     const artClass = fish.art ? " has-art" : "";
     const artStyle = fish.art ? ` --fish-art:url('${fish.art}');` : "";
     const expandedClass = expanded ? " is-expanded" : "";
+    const valueAnimation = state.valueAnimations?.[fish.uid];
+    const isValueAnimating = valueAnimation && valueAnimation.until > Date.now();
+    const value = isValueAnimating ? valueAnimation.displayValue : fishCardValue(fish);
+    const valueClass = isValueAnimating ? " is-value-spinning" : "";
+    const valueStyle = isValueAnimating ? ` style="--value-spin-duration:${valueAnimation.duration}ms"` : "";
+    const valueGain = isValueAnimating ? ` data-gain="+${valueAnimation.gain}"` : "";
 
     return `
-        <div class="fish-card${starClass}${artClass}${expandedClass}" style="--fish-color:${fish.color}; --rarity-color:${rarityColor};${artStyle}">
+        <div class="fish-card${starClass}${artClass}${expandedClass}" data-card-uid="${fish.uid || ""}" style="--fish-color:${fish.color}; --rarity-color:${rarityColor};${artStyle}">
             <div class="fish-card-header">
                 <strong class="fish-name">${fish.name}</strong>
                 <span class="fish-stars" aria-label="${star}星">${starIcons}</span>
             </div>
             <div class="fish-sprite" aria-hidden="true"></div>
-            <strong class="fish-value" aria-label="价值">${fishCardValue(fish)}</strong>
+            <strong class="fish-value${valueClass}"${valueStyle}${valueGain} aria-label="价值"><span class="fish-value-number">${value}</span></strong>
             ${expanded ? cardDetailTemplate(fish) : ""}
             ${options.hideAction ? "" : `<button class="card-action" type="button">出售 ${fishSellValue(fish)}G</button>`}
             ${controls}
@@ -1463,15 +1563,19 @@ function tutorialTemplate() {
             </section>
             <section>
                 <h3>饵料等级</h3>
-                <p>饵料等级用星星表示。星数越高，钓到高品质鱼卡的概率越高。升级饵料需要金币，部分鱼卡会改变钓鱼费用或升级费用。</p>
+                <p>饵料等级用星星表示。星数越高，高品质鱼卡在稀有度池里的权重越高。长按钓鱼进入最佳区间时，本次高品质权重会小幅提高。</p>
             </section>
             <section>
                 <h3>水族馆格子</h3>
                 <p>鱼卡只能放进已解锁的鱼缸格子。每 3 天结算通过后，会获得一次免费扩建水族馆的机会。</p>
             </section>
             <section>
+                <h3>金币收入</h3>
+                <p>每天开始时会获得基础金币。每过 3 天，基础每日金币会增加 1 点；角色和鱼卡效果还可能提供额外收入。</p>
+            </section>
+            <section>
                 <h3>价值与出售</h3>
-                <p>鱼卡右下角的数字是当前价值。鱼卡在新一天开始时会自然成长，也可能被其他鱼卡效果强化。点击水族馆里的鱼卡，可以查看详情或出售。</p>
+                <p>鱼卡右下角的数字是当前价值。新一天开始时，水族馆里的鱼卡会按自身星级和效果增加价值。点击鱼卡可以查看详情或出售。</p>
             </section>
             <section>
                 <h3>合成</h3>
@@ -2012,6 +2116,11 @@ function setSelectedCharacter(characterId) {
 }
 
 function resetGame(modeId = "standard", startImmediately = true, characterId = state.characterId || "tide") {
+    valueAnimationTimers.forEach((timerId) => window.clearTimeout(timerId));
+    valueAnimationIntervals.forEach((intervalId) => window.clearInterval(intervalId));
+    valueAnimationTimers.clear();
+    valueAnimationIntervals.clear();
+
     const nextState = createInitialState(modeId, startImmediately, characterId);
 
     Object.keys(state).forEach((key) => {

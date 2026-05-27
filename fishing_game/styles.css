@@ -1171,10 +1171,42 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         inset 0 0 0 2px rgba(84, 42, 2, 0.38),
         0 2px 0 rgba(0, 0, 0, 0.6),
         0 0 12px rgba(255, 216, 90, 0.18);
+    transform-style: preserve-3d;
+    perspective: 120px;
 }
 
 .fish-value::before {
     content: none;
+}
+
+.fish-value-number {
+    display: block;
+    transform-origin: center center;
+}
+
+.fish-value.is-value-spinning {
+    animation: valueBadgePulse var(--value-spin-duration, 360ms) ease-out both;
+}
+
+.fish-value.is-value-spinning .fish-value-number {
+    animation: valueSlotSpin var(--value-spin-duration, 360ms) steps(9, end) both;
+    will-change: transform, filter;
+}
+
+.fish-value.is-value-spinning::after {
+    content: attr(data-gain);
+    position: absolute;
+    right: -4px;
+    top: -13px;
+    min-width: 24px;
+    color: #fff5b6;
+    font-family: "ZCOOL QingKe HuangYou", "Microsoft YaHei", sans-serif;
+    font-size: 0.82rem;
+    line-height: 1;
+    text-align: center;
+    text-shadow: 0 2px 0 #000;
+    animation: valueGainFloat var(--value-spin-duration, 360ms) ease-out both;
+    pointer-events: none;
 }
 
 .card-action {
@@ -1661,6 +1693,61 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     50% {
         filter: brightness(1.7);
         transform: scale(1.06);
+    }
+}
+
+@keyframes valueSlotSpin {
+    0% {
+        transform: rotateX(0deg) scale(1);
+        filter: blur(0);
+    }
+    22% {
+        transform: rotateX(180deg) scale(1.08);
+        filter: blur(1px);
+    }
+    48% {
+        transform: rotateX(360deg) scale(1.08);
+        filter: blur(1px);
+    }
+    72% {
+        transform: rotateX(540deg) scale(1.04);
+        filter: blur(0.5px);
+    }
+    100% {
+        transform: rotateX(720deg) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes valueBadgePulse {
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0 0 2px rgba(84, 42, 2, 0.38),
+            0 2px 0 rgba(0, 0, 0, 0.6),
+            0 0 12px rgba(255, 216, 90, 0.18);
+    }
+    45% {
+        box-shadow:
+            inset 0 0 0 2px rgba(255, 249, 191, 0.46),
+            0 2px 0 rgba(0, 0, 0, 0.6),
+            0 0 22px rgba(255, 216, 90, 0.56);
+    }
+}
+
+@keyframes valueGainFloat {
+    0% {
+        opacity: 0;
+        transform: translateY(4px) scale(0.86);
+    }
+    20%,
+    70% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.92);
     }
 }
 
