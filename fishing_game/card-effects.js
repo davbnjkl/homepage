@@ -402,6 +402,20 @@ window.FISHING_CARD_EFFECTS = {
             }
         },
 
+        adjustFishingChargeWindow: {
+            run(effect, card, context) {
+                if (!context.chargeWindow) {
+                    return;
+                }
+
+                ["perfectStartMs", "perfectEndMs", "maxMs", "rarityBonus"].forEach((key) => {
+                    if (Number.isFinite(effect[key])) {
+                        context.chargeWindow[key] += effect[key];
+                    }
+                });
+            }
+        },
+
         addValueToLowestPond: {
             run(effect, card, context) {
                 const target = context.state.pond.reduce((lowest, fish) => {

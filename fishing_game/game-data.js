@@ -15,10 +15,11 @@ window.FISHING_GAME_DATA = {
             onCatchChoice: "生成鱼获选择时",
             onCheckpoint: "三日结算时",
             modifyBaitPool: "事件调整稀有度池",
-            modifyCatchPickCount: "事件调整鱼获选择数量",
-            modifySellValue: "事件调整卖鱼价格",
-            modifyCardValue: "事件调整鱼卡价值",
-            modifyCoreUpgradeCost: "事件调整饵料升级费用"
+        modifyCatchPickCount: "事件调整鱼获选择数量",
+        modifySellValue: "事件调整卖鱼价格",
+        modifyCardValue: "事件调整鱼卡价值",
+        modifyCoreUpgradeCost: "事件调整饵料升级费用",
+        modifyFishingChargeWindow: "事件调整钓鱼蓄力窗口"
         },
         events: []
     },
@@ -222,6 +223,7 @@ window.FISHING_GAME_DATA = {
         modifyCardValue: "计算鱼卡价值时",
         modifyDailyValueGain: "计算每日价值成长时",
         modifyBaitPool: "计算饵料掉落池时",
+        modifyFishingChargeWindow: "计算钓鱼蓄力窗口时",
         modifyCatchPickCount: "计算鱼获可选数量时",
         modifyFishingCost: "计算钓鱼花费时",
         modifyCoreUpgradeCost: "计算饵料升级费用时",
@@ -340,6 +342,10 @@ window.FISHING_GAME_DATA = {
         multiplyRarityWeights: {
             label: "批量倍率调整稀有度权重",
             fields: ["multipliers"]
+        },
+        adjustFishingChargeWindow: {
+            label: "调整钓鱼蓄力窗口",
+            fields: ["perfectStartMs", "perfectEndMs", "maxMs", "rarityBonus"]
         },
         addValueToLowestPond: {
             label: "水族馆最低价值鱼加值",

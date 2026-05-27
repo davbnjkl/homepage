@@ -4,6 +4,7 @@ const EFFECTS = window.FISHING_CARD_EFFECTS;
 const elements = {
     mainMenu: document.getElementById("mainMenu"),
     startGameButton: document.getElementById("startGameButton"),
+    tutorialButton: document.getElementById("tutorialButton"),
     modeButtons: [...document.querySelectorAll("[data-mode-id]")],
     characterButtons: [...document.querySelectorAll("[data-character-id]")],
     characterPreviewArt: document.getElementById("characterPreviewArt"),
@@ -23,6 +24,10 @@ const elements = {
     baitCount: document.getElementById("baitCount"),
     baitLimit: document.getElementById("baitLimit"),
     baitRack: document.getElementById("baitRack"),
+    chargeMeter: document.getElementById("chargeMeter"),
+    chargeFill: document.getElementById("chargeFill"),
+    chargePerfectZone: document.getElementById("chargePerfectZone"),
+    chargeHint: document.getElementById("chargeHint"),
     catchChoiceArea: document.getElementById("catchChoiceArea"),
     lastCatch: document.getElementById("lastCatch"),
     logList: document.getElementById("logList"),
@@ -54,6 +59,12 @@ const STORAGE = {
 const INITIAL_COINS = 2;
 const BASE_DAILY_COINS = 4;
 const BASE_FISHING_COST = 3;
+const DEFAULT_CHARGE_WINDOW = {
+    perfectStartMs: 900,
+    perfectEndMs: 1100,
+    maxMs: 1300,
+    rarityBonus: 0.08
+};
 
 function createInitialState(modeId = "standard", gameStarted = false, characterId = "tide") {
     return {
@@ -79,6 +90,13 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
         combineHighlightUid: null,
         placementHighlightUid: null,
         sellingCardUid: null,
+        charge: {
+            isCharging: false,
+            startedAt: 0,
+            elapsedMs: 0,
+            rafId: null,
+            pointerId: null
+        },
         stats: {
             caught: 0,
             combined: 0,
@@ -376,8 +394,10 @@ function drawFishByBait(baitId) {
         period: currentPeriod(),
         day: state.day,
         dailyCatchCount: state.dailyCatchCount,
-        tripCatchCount: state.dailyCatchCount
+        tripCatchCount: state.dailyCatchCount,
+        charge: state.currentCatchCharge || null
     });
+    applyChargeRarityBonus(rarityWeights, state.currentCatchCharge);
     const availableWeights = normalizeRarityWeights(rarityWeights);
     const fallbackWeights = normalizeRarityWeights(bait.rarityWeights);
     const pickedWeight = weightedPick(availableWeights.length > 0 ? availableWeights : fallbackWeights);
@@ -386,6 +406,26 @@ function drawFishByBait(baitId) {
     const template = candidates[Math.floor(Math.random() * candidates.length)] || DATA.fishPool[0];
 
     return createFishInstance(template, baitId);
+}
+
+function applyChargeRarityBonus(rarityWeights, charge) {
+    if (!charge?.isPerfect || charge.rarityBonus <= 0) {
+        return;
+    }
+
+    const rarityMultipliers = {
+        uncommon: 1 + charge.rarityBonus * 0.5,
+        rare: 1 + charge.rarityBonus,
+        epic: 1 + charge.rarityBonus * 1.15,
+        legendary: 1 + charge.rarityBonus * 1.3,
+        mythic: 1 + charge.rarityBonus * 1.45
+    };
+
+    rarityWeights.forEach((item) => {
+        if (rarityMultipliers[item.rarity]) {
+            item.weight *= rarityMultipliers[item.rarity];
+        }
+    });
 }
 
 function baitIdForLevel(level) {
@@ -1002,6 +1042,7 @@ function renderButtons() {
     const maxBaitLevel = DATA.baitLevelOrder?.length || 6;
     const disabledBeforeStart = !state.gameStarted;
     const hasPendingCatch = state.catchChoices.length > 0;
+    const baitStars = baitStarsText();
 
     if (hasPendingCatch) {
         elements.fishButton.textContent = "重选鱼获";
@@ -1012,13 +1053,65 @@ function renderButtons() {
     }
 
     elements.advanceTimeButton.disabled = disabledBeforeStart || state.decisionLocked || hasPendingCatch;
-    elements.upgradeCoreButton.textContent = `升级饵料 ${coreCost}G`;
+    elements.upgradeCoreButton.textContent = state.baitLevel >= maxBaitLevel
+        ? `饵料已满 ${baitStars}`
+        : `升级饵料 ${baitStars} ${coreCost}G`;
     elements.upgradeCoreButton.disabled = disabledBeforeStart
         || state.baitLevel >= maxBaitLevel
         || state.coins < coreCost
         || state.decisionLocked
         || hasPendingCatch;
     elements.advanceTimeButton.textContent = "结束今天";
+}
+
+function baitStarsText() {
+    const level = Math.max(1, Math.floor(state.baitLevel || 1));
+    return "★".repeat(level);
+}
+
+function fishingChargeConfig() {
+    const chargeWindow = { ...DEFAULT_CHARGE_WINDOW };
+
+    runOwnedCardsHook("modifyFishingChargeWindow", { chargeWindow });
+
+    chargeWindow.perfectStartMs = Math.max(0, Math.floor(chargeWindow.perfectStartMs));
+    chargeWindow.perfectEndMs = Math.max(chargeWindow.perfectStartMs + 1, Math.floor(chargeWindow.perfectEndMs));
+    chargeWindow.maxMs = Math.max(chargeWindow.perfectEndMs + 1, Math.floor(chargeWindow.maxMs));
+    chargeWindow.rarityBonus = Math.max(0, Number(chargeWindow.rarityBonus) || 0);
+
+    return chargeWindow;
+}
+
+function chargeResult(elapsedMs = 0) {
+    const config = fishingChargeConfig();
+    const elapsed = Math.max(0, Math.floor(elapsedMs));
+
+    return {
+        elapsedMs: elapsed,
+        isPerfect: elapsed >= config.perfectStartMs && elapsed <= config.perfectEndMs,
+        rarityBonus: config.rarityBonus,
+        config
+    };
+}
+
+function renderChargeMeter(progress = state.charge?.elapsedMs || 0) {
+    if (!elements.chargeMeter || !elements.chargeFill || !elements.chargePerfectZone) {
+        return;
+    }
+
+    const config = fishingChargeConfig();
+    const clampedProgress = Math.max(0, Math.min(1, progress / config.maxMs));
+    const perfectLeft = Math.max(0, Math.min(1, config.perfectStartMs / config.maxMs));
+    const perfectRight = Math.max(perfectLeft, Math.min(1, config.perfectEndMs / config.maxMs));
+
+    elements.chargeFill.style.transform = `scaleX(${clampedProgress})`;
+    elements.chargePerfectZone.style.left = `${perfectLeft * 100}%`;
+    elements.chargePerfectZone.style.width = `${(perfectRight - perfectLeft) * 100}%`;
+
+    const result = chargeResult(progress);
+    elements.chargeMeter.classList.toggle("is-charging", Boolean(state.charge?.isCharging));
+    elements.chargeMeter.classList.toggle("is-perfect", Boolean(state.charge?.isCharging && result.isPerfect));
+    elements.chargeHint.textContent = result.isPerfect ? "最佳区间" : "长按钓鱼";
 }
 
 function render() {
@@ -1046,6 +1139,7 @@ function render() {
     renderStorageGrid(elements.pondGrid, "pond");
     renderCatchChoiceArea();
     renderButtons();
+    renderChargeMeter();
 }
 
 function catchPickLimit(baitId, bait, choices) {
@@ -1192,6 +1286,10 @@ function openCatchChoiceDecision() {
 }
 
 function catchFish() {
+    return catchFishWithCharge(chargeResult(0));
+}
+
+function catchFishWithCharge(charge = chargeResult(0)) {
     const fishCost = fishingCost();
 
     if (state.coins < fishCost || state.decisionLocked || state.catchChoices.length > 0) {
@@ -1202,8 +1300,10 @@ function catchFish() {
     const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
     state.coins -= fishCost;
     runEventSystemHook("onCatchStart", { baitId, bait, day: state.day });
+    state.currentCatchCharge = charge;
     const choices = drawCatchChoices(baitId);
-    runEventSystemHook("onCatchChoice", { baitId, bait, choices, day: state.day });
+    runEventSystemHook("onCatchChoice", { baitId, bait, choices, day: state.day, charge });
+    state.currentCatchCharge = null;
     state.stats.baitUsed += 1;
     state.dailyCatchCount += 1;
     state.catchChoices = choices;
@@ -1214,6 +1314,9 @@ function catchFish() {
     elements.pixelScene.classList.add("is-catching");
     setStatus("选择鱼获");
     addLog(`支付 ${fishCost}G 使用${bait.name}钓鱼，钓上 3 条鱼，可选择 ${state.catchPickLimit} 条放入水族馆。`);
+    if (charge.isPerfect) {
+        addLog(`蓄力命中最佳区间，本次高品质鱼权重小幅提高。`);
+    }
 
     window.setTimeout(() => {
         elements.pixelScene.classList.remove("is-catching");
@@ -1236,17 +1339,168 @@ function handleFishButtonClick() {
     catchFish();
 }
 
+let suppressFishClickUntil = 0;
+
+function canStartFishingCharge() {
+    return state.gameStarted
+        && !state.decisionLocked
+        && state.catchChoices.length === 0
+        && state.coins >= fishingCost();
+}
+
+function startFishingCharge(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+        return;
+    }
+
+    if (!canStartFishingCharge()) {
+        return;
+    }
+
+    event.preventDefault();
+    elements.fishButton.setPointerCapture?.(event.pointerId);
+    state.charge.isCharging = true;
+    state.charge.startedAt = performance.now();
+    state.charge.elapsedMs = 0;
+    state.charge.pointerId = event.pointerId;
+    elements.fishButton.classList.add("is-charging");
+    updateFishingCharge();
+}
+
+function updateFishingCharge() {
+    if (!state.charge.isCharging) {
+        return;
+    }
+
+    const config = fishingChargeConfig();
+    state.charge.elapsedMs = Math.min(performance.now() - state.charge.startedAt, config.maxMs);
+    renderChargeMeter(state.charge.elapsedMs);
+    state.charge.rafId = window.requestAnimationFrame(updateFishingCharge);
+}
+
+function stopFishingCharge(event, options = {}) {
+    if (!state.charge.isCharging) {
+        return false;
+    }
+
+    if (event && state.charge.pointerId !== null && event.pointerId !== state.charge.pointerId) {
+        return false;
+    }
+
+    window.cancelAnimationFrame(state.charge.rafId);
+    const elapsed = state.charge.elapsedMs || Math.max(0, performance.now() - state.charge.startedAt);
+    const result = chargeResult(elapsed);
+
+    state.charge.isCharging = false;
+    state.charge.startedAt = 0;
+    state.charge.elapsedMs = 0;
+    state.charge.rafId = null;
+    state.charge.pointerId = null;
+    elements.fishButton.classList.remove("is-charging");
+    renderChargeMeter(0);
+
+    if (event) {
+        suppressFishClickUntil = performance.now() + 350;
+        event.preventDefault();
+    }
+
+    if (!options.cancel) {
+        catchFishWithCharge(result);
+    }
+
+    return true;
+}
+
+function cancelFishingCharge(event) {
+    stopFishingCharge(event, { cancel: true });
+}
+
+function handleFishButtonPointerUp(event) {
+    if (stopFishingCharge(event)) {
+        return;
+    }
+
+    if (!state.decisionLocked && state.catchChoices.length > 0) {
+        suppressFishClickUntil = performance.now() + 350;
+        event.preventDefault();
+        openCatchChoiceDecision();
+    }
+}
+
+function handleFishButtonFallbackClick() {
+    if (performance.now() < suppressFishClickUntil) {
+        return;
+    }
+
+    handleFishButtonClick();
+}
+
 function closeDecision() {
     state.decisionLocked = false;
     elements.decisionModal.hidden = true;
     elements.decisionModal.classList.remove("catch-choice-modal");
     elements.decisionModal.classList.remove("card-detail-modal");
+    elements.decisionModal.classList.remove("tutorial-modal");
     elements.decisionOptions.innerHTML = "";
     elements.decisionPreview.innerHTML = "";
     elements.decisionOptions.classList.remove("upgrade-cell-grid");
     elements.decisionOptions.classList.remove("catch-choice-grid");
     elements.decisionOptions.classList.remove("catch-replace-grid");
     elements.decisionOptions.classList.remove("card-detail-actions");
+    elements.decisionOptions.classList.remove("tutorial-actions");
+}
+
+function tutorialTemplate() {
+    return `
+        <div class="tutorial-guide">
+            <section>
+                <h3>目标</h3>
+                <p>经营你的水族馆，让馆内鱼卡的总价值不断成长。每 3 天结束时会进行一次价值检查，达到目标才能继续本轮。</p>
+            </section>
+            <section>
+                <h3>每日行动</h3>
+                <p>每天可以花费金币钓鱼。钓鱼会出现 3 张鱼卡，选择其中 1 张，再点击水族馆格子放入。部分鱼卡效果可以让你一次选择更多鱼。</p>
+            </section>
+            <section>
+                <h3>饵料等级</h3>
+                <p>饵料等级用星星表示。星数越高，钓到高品质鱼卡的概率越高。升级饵料需要金币，部分鱼卡会改变钓鱼费用或升级费用。</p>
+            </section>
+            <section>
+                <h3>水族馆格子</h3>
+                <p>鱼卡只能放进已解锁的鱼缸格子。每 3 天结算通过后，会获得一次免费扩建水族馆的机会。</p>
+            </section>
+            <section>
+                <h3>价值与出售</h3>
+                <p>鱼卡右下角的数字是当前价值。鱼卡在新一天开始时会自然成长，也可能被其他鱼卡效果强化。点击水族馆里的鱼卡，可以查看详情或出售。</p>
+            </section>
+            <section>
+                <h3>合成</h3>
+                <p>水族馆内出现 3 张同名同星鱼卡时会自动合成，保留第一张的位置并提升 1 星。更高星级通常意味着更强效果。</p>
+            </section>
+        </div>
+    `;
+}
+
+function openTutorialDecision() {
+    if (state.decisionLocked) {
+        return;
+    }
+
+    state.decisionLocked = true;
+    elements.decisionModal.hidden = false;
+    elements.decisionModal.classList.add("tutorial-modal");
+    elements.decisionTitle.textContent = "新手教程";
+    elements.decisionCopy.textContent = "先理解每天该做什么，再开始你的水族馆构筑。";
+    elements.decisionPreview.innerHTML = tutorialTemplate();
+    elements.decisionOptions.innerHTML = "";
+    elements.decisionOptions.classList.add("tutorial-actions");
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "decision-option";
+    closeButton.innerHTML = "<strong>知道了</strong><span>返回主菜单</span>";
+    closeButton.addEventListener("click", closeDecision);
+    elements.decisionOptions.appendChild(closeButton);
 }
 
 function advanceTime() {
@@ -1781,10 +2035,15 @@ function resetGame(modeId = "standard", startImmediately = true, characterId = s
     }
 }
 
-elements.fishButton.addEventListener("click", handleFishButtonClick);
+elements.fishButton.addEventListener("pointerdown", startFishingCharge);
+elements.fishButton.addEventListener("pointerup", handleFishButtonPointerUp);
+elements.fishButton.addEventListener("pointercancel", cancelFishingCharge);
+elements.fishButton.addEventListener("lostpointercapture", cancelFishingCharge);
+elements.fishButton.addEventListener("click", handleFishButtonFallbackClick);
 elements.advanceTimeButton.addEventListener("click", advanceTime);
 elements.upgradeCoreButton.addEventListener("click", openCoreUpgrade);
 elements.startGameButton.addEventListener("click", () => resetGame(state.modeId, true, state.characterId));
+elements.tutorialButton.addEventListener("click", openTutorialDecision);
 elements.modeButtons.forEach((button) => {
     button.addEventListener("click", () => setSelectedMode(button.dataset.modeId));
 });

@@ -51,13 +51,10 @@
                     <small>低价值鱼每日成长，合成结果额外加值。</small>
                 </button>
             </div>
-            <div class="tutorial-note">
-                <strong>新手目标</strong>
-                <p>每天花费金币捕鱼。每次钓鱼会钓上 3 张鱼卡，点卡查看效果，再选择鱼卡放入水族馆格子。</p>
-                <p>水族馆里的鱼每天增加价值，3 张同名同星鱼会自动合成。特殊鱼卡后续可以改变可选鱼获数量和放置规则。</p>
-                <p>每 3 天结束会检查水族馆总价值，达到目标才能继续本轮。</p>
+            <div class="menu-action-row">
+                <button id="tutorialButton" type="button" class="pixel-button pixel-button-muted">新手教程</button>
+                <button id="startGameButton" type="button" class="pixel-button pixel-button-accent main-start-button">开始游戏</button>
             </div>
-            <button id="startGameButton" type="button" class="pixel-button pixel-button-accent main-start-button">开始游戏</button>
         </div>
     </section>
 
@@ -203,6 +200,16 @@
                     <div class="section-title-row">
                         <h3>操作</h3>
                         <span>钓鱼 / 升级 / 结算</span>
+                    </div>
+                    <div class="charge-meter" id="chargeMeter" aria-label="钓鱼蓄力条">
+                        <div class="charge-meter-head">
+                            <span>蓄力</span>
+                            <strong id="chargeHint">长按钓鱼</strong>
+                        </div>
+                        <div class="charge-track">
+                            <span class="charge-perfect-zone" id="chargePerfectZone"></span>
+                            <span class="charge-fill" id="chargeFill"></span>
+                        </div>
                     </div>
                     <div class="shop-grid">
                         <button id="fishButton" type="button" class="pixel-button pixel-button-accent">钓鱼 2G</button>
