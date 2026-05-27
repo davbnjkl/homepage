@@ -362,6 +362,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "blue-scale",
             name: "青鳞鱼",
+            race: "杂鱼种族",
             rarity: "common",
             slotSize: 1,
             baseValue: 4,
@@ -384,6 +385,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "orange-carp",
             name: "橙尾鲤",
+            race: "杂鱼种族",
             rarity: "uncommon",
             slotSize: 1,
             baseValue: 7,
@@ -406,6 +408,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "red-lantern",
             name: "红鳍灯鱼",
+            race: "杂鱼种族",
             rarity: "uncommon",
             slotSize: 1,
             baseValue: 8,
@@ -429,6 +432,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "moon-bass",
             name: "月光鲈",
+            race: "杂鱼种族",
             rarity: "rare",
             slotSize: 1,
             baseValue: 12,
@@ -451,6 +455,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "silver-sail",
             name: "银帆鲭",
+            race: "杂鱼种族",
             rarity: "rare",
             slotSize: 1,
             baseValue: 13,
@@ -479,6 +484,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "stone-catfish",
             name: "石甲鲶",
+            race: "杂鱼种族",
             rarity: "epic",
             slotSize: 1,
             baseValue: 20,
@@ -501,6 +507,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "deep-crown",
             name: "深冠鳐",
+            race: "杂鱼种族",
             rarity: "epic",
             slotSize: 2,
             baseValue: 24,
@@ -523,6 +530,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "gold-dragon",
             name: "金纹龙鱼",
+            race: "杂鱼种族",
             rarity: "legendary",
             slotSize: 2,
             baseValue: 42,
@@ -551,6 +559,7 @@ window.FISHING_GAME_DATA = {
         {
             id: "deep-monster",
             name: "深海异王",
+            race: "杂鱼种族",
             rarity: "mythic",
             slotSize: 2,
             baseValue: 55,

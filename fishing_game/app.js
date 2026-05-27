@@ -789,27 +789,53 @@ function fishRaceLabel(fish) {
     return "";
 }
 
+function starSpecificEffectText(effectText, star) {
+    const text = String(effectText || "").trim();
+
+    if (!text) {
+        return "";
+    }
+
+    const markers = [...text.matchAll(/(?:^|[。；;\s])([123])\s*星(?:效果)?\s*[:：]\s*/g)];
+
+    if (markers.length === 0) {
+        return text;
+    }
+
+    const target = String(Math.max(1, Math.min(3, Math.floor(star || 1))));
+    const markerIndex = markers.findIndex((marker) => marker[1] === target);
+
+    if (markerIndex < 0) {
+        return text;
+    }
+
+    const start = markers[markerIndex].index + markers[markerIndex][0].length;
+    const end = markers[markerIndex + 1]?.index ?? text.length;
+
+    return text
+        .slice(start, end)
+        .replace(/^[。；;，,\s]+/, "")
+        .trim() || text;
+}
+
+function currentEffectText(fish) {
+    return starSpecificEffectText(fish?.effectText, cardStar(fish));
+}
+
 function cardDetailTemplate(fish) {
     const race = fishRaceLabel(fish);
-    const raceRow = race ? `
-            <div class="fish-detail-row">
-                <span>种族</span>
-                <p>${race}</p>
-            </div>
-        ` : "";
+    const effectText = currentEffectText(fish) || "暂无特殊效果。";
+    const raceText = race ? `<p class="fish-detail-race">${race}</p>` : "";
 
     return `
         <div class="fish-detail">
-            ${raceRow}
-            <div class="fish-detail-row">
-                <span>效果</span>
-                <p>${fish.effectText || "暂无特殊效果。"}</p>
-            </div>
+            ${raceText}
+            <p class="fish-detail-effect">${effectText}</p>
         </div>
     `;
 }
 
-function cardTemplate(fish, controls = "", expanded = false) {
+function cardTemplate(fish, controls = "", expanded = false, options = {}) {
     const rarityColor = fish.rarityColor || DATA.rarityColors?.[fish.rarity] || "#8fb1c9";
     const star = Math.max(1, Math.floor(fish.star || 1));
     const starIcons = "★".repeat(star);
@@ -827,7 +853,7 @@ function cardTemplate(fish, controls = "", expanded = false) {
             <div class="fish-sprite" aria-hidden="true"></div>
             <strong class="fish-value" aria-label="价值">${fishCardValue(fish)}</strong>
             ${expanded ? cardDetailTemplate(fish) : ""}
-            <button class="card-action" type="button">出售 ${fishSellValue(fish)}G</button>
+            ${options.hideAction ? "" : `<button class="card-action" type="button">出售 ${fishSellValue(fish)}G</button>`}
             ${controls}
         </div>
     `;
@@ -910,7 +936,7 @@ function renderStorageGrid(grid, storage) {
             } else {
                 slot.style.gridColumn = `span ${slotSize}`;
             }
-            slot.innerHTML = cardTemplate(entry.fish, "", isSelected);
+            slot.innerHTML = cardTemplate(entry.fish, "", false, { hideAction: true });
         } else if (coveredEntry && !coveredEntry.isStart) {
             slot.classList.add("slot-covered");
             slot.innerHTML = "";
@@ -977,14 +1003,21 @@ function renderButtons() {
     const disabledBeforeStart = !state.gameStarted;
     const hasPendingCatch = state.catchChoices.length > 0;
 
-    elements.fishButton.disabled = disabledBeforeStart || state.coins < fishCost || state.decisionLocked || hasPendingCatch;
+    if (hasPendingCatch) {
+        elements.fishButton.textContent = "重选鱼获";
+        elements.fishButton.disabled = disabledBeforeStart || state.decisionLocked;
+    } else {
+        elements.fishButton.textContent = `钓鱼 ${fishCost}G`;
+        elements.fishButton.disabled = disabledBeforeStart || state.coins < fishCost || state.decisionLocked;
+    }
+
     elements.advanceTimeButton.disabled = disabledBeforeStart || state.decisionLocked || hasPendingCatch;
     elements.upgradeCoreButton.textContent = `升级饵料 ${coreCost}G`;
     elements.upgradeCoreButton.disabled = disabledBeforeStart
         || state.baitLevel >= maxBaitLevel
         || state.coins < coreCost
-        || state.decisionLocked;
-    elements.fishButton.textContent = `钓鱼 ${fishCost}G`;
+        || state.decisionLocked
+        || hasPendingCatch;
     elements.advanceTimeButton.textContent = "结束今天";
 }
 
@@ -1089,6 +1122,7 @@ function finishCatchPick(fish) {
 
     state.selectedCatchUid = null;
     setStatus(`继续选择鱼获 ${state.catchPicksRemaining}/${state.catchPickLimit}`);
+    window.setTimeout(openCatchChoiceDecision, 0);
 }
 
 function renderCatchChoiceArea() {
@@ -1122,6 +1156,41 @@ function renderCatchChoiceArea() {
     });
 }
 
+function chooseCatchFish(fish) {
+    state.selectedCatchUid = fish.uid;
+    closeDecision();
+    setStatus("点击水族馆格子");
+    addLog(`已选择「${fish.name}」，点击水族馆格子放入。`);
+    render();
+}
+
+function openCatchChoiceDecision() {
+    if (state.catchChoices.length === 0) {
+        return;
+    }
+
+    state.decisionLocked = true;
+    elements.decisionModal.hidden = false;
+    elements.decisionModal.classList.add("catch-choice-modal");
+    elements.decisionTitle.textContent = "选择本次鱼获";
+    elements.decisionCopy.textContent = `本次可选择 ${state.catchPicksRemaining}/${state.catchPickLimit} 条鱼放入水族馆。`;
+    elements.decisionPreview.innerHTML = "";
+    elements.decisionOptions.innerHTML = "";
+    elements.decisionOptions.classList.add("catch-choice-grid");
+
+    state.catchChoices.forEach((fish, index) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "catch-choice-pick";
+        option.style.setProperty("--choice-index", String(index));
+        option.innerHTML = cardTemplate(fish, "", true, { hideAction: true });
+        option.addEventListener("click", () => chooseCatchFish(fish));
+        elements.decisionOptions.appendChild(option);
+    });
+
+    render();
+}
+
 function catchFish() {
     const fishCost = fishingCost();
 
@@ -1151,17 +1220,33 @@ function catchFish() {
     }, 700);
 
     render();
+    openCatchChoiceDecision();
+}
+
+function handleFishButtonClick() {
+    if (state.decisionLocked) {
+        return;
+    }
+
+    if (state.catchChoices.length > 0) {
+        openCatchChoiceDecision();
+        return;
+    }
+
+    catchFish();
 }
 
 function closeDecision() {
     state.decisionLocked = false;
     elements.decisionModal.hidden = true;
     elements.decisionModal.classList.remove("catch-choice-modal");
+    elements.decisionModal.classList.remove("card-detail-modal");
     elements.decisionOptions.innerHTML = "";
     elements.decisionPreview.innerHTML = "";
     elements.decisionOptions.classList.remove("upgrade-cell-grid");
     elements.decisionOptions.classList.remove("catch-choice-grid");
     elements.decisionOptions.classList.remove("catch-replace-grid");
+    elements.decisionOptions.classList.remove("card-detail-actions");
 }
 
 function advanceTime() {
@@ -1445,6 +1530,45 @@ function sellFish(source, index) {
     }, 180);
 }
 
+function openCardDetailDecision(storage, index) {
+    const fish = storageCards(storage)[index];
+
+    if (!fish) {
+        return;
+    }
+
+    state.decisionLocked = true;
+    elements.decisionModal.hidden = false;
+    elements.decisionModal.classList.add("card-detail-modal");
+    elements.decisionTitle.textContent = fish.name;
+    elements.decisionCopy.textContent = `${fishCardValue(fish)} 价值 / 出售 ${fishSellValue(fish)}G`;
+    elements.decisionPreview.innerHTML = cardTemplate(fish, "", true, { hideAction: true });
+    elements.decisionOptions.innerHTML = "";
+    elements.decisionOptions.classList.add("card-detail-actions");
+
+    const sellButton = document.createElement("button");
+    sellButton.type = "button";
+    sellButton.className = "decision-option decision-danger";
+    sellButton.innerHTML = `<strong>出售</strong><span>获得 ${fishSellValue(fish)}G，并空出水族馆格子</span>`;
+    sellButton.addEventListener("click", () => {
+        closeDecision();
+        sellFish(storage, index);
+    });
+    elements.decisionOptions.appendChild(sellButton);
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "decision-option";
+    closeButton.innerHTML = "<strong>关闭</strong><span>保留这张鱼卡</span>";
+    closeButton.addEventListener("click", () => {
+        closeDecision();
+        render();
+    });
+    elements.decisionOptions.appendChild(closeButton);
+
+    render();
+}
+
 function handleCardClick(event, storage) {
     const action = event.target.closest(".card-action");
     const slot = event.target.closest(".slot");
@@ -1481,17 +1605,7 @@ function handleCardClick(event, storage) {
         return;
     }
 
-    const isSameCard = state.selectedCard
-        && state.selectedCard.storage === storage
-        && state.selectedCard.uid === card.uid;
-
-    state.selectedCard = isSameCard
-        ? null
-        : {
-            storage,
-            uid: card.uid
-        };
-    render();
+    openCardDetailDecision(storage, index);
 }
 
 function moveCard(source, sourceIndex, target, targetIndex) {
@@ -1667,7 +1781,7 @@ function resetGame(modeId = "standard", startImmediately = true, characterId = s
     }
 }
 
-elements.fishButton.addEventListener("click", catchFish);
+elements.fishButton.addEventListener("click", handleFishButtonClick);
 elements.advanceTimeButton.addEventListener("click", advanceTime);
 elements.upgradeCoreButton.addEventListener("click", openCoreUpgrade);
 elements.startGameButton.addEventListener("click", () => resetGame(state.modeId, true, state.characterId));
