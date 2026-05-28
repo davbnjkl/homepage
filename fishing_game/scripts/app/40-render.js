@@ -268,8 +268,8 @@ function renderButtons() {
     const baitStars = baitStarsText();
 
     if (hasPendingCatch) {
-        elements.fishButton.textContent = "重选鱼获";
-        elements.fishButton.disabled = disabledBeforeStart || state.decisionLocked;
+        elements.fishButton.textContent = "鱼获待处理";
+        elements.fishButton.disabled = true;
     } else {
         elements.fishButton.textContent = `钓鱼 ${fishCost}G`;
         elements.fishButton.disabled = disabledBeforeStart || state.coins < fishCost || state.decisionLocked;

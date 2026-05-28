@@ -17,6 +17,32 @@ function clearCatchChoices() {
     state.catchPicksRemaining = 0;
 }
 
+function sellReplacedPondFish(removed, incomingCard, cellIndex) {
+    const sale = {
+        source: "pond",
+        index: state.pond.findIndex((card) => card.uid === removed.uid),
+        value: fishSellValue(removed),
+        cancelled: false,
+        reason: "replace"
+    };
+
+    runOwnedCardsHook("onBeforeSell", { card: removed, sale, replacingWith: incomingCard, soldCellIndex: cellIndex });
+
+    if (sale.cancelled) {
+        addLog(`「${removed.name}」的出售被鱼卡效果阻止，无法替换。`);
+        return false;
+    }
+
+    state.pond = state.pond.filter((card) => card.uid !== removed.uid);
+    state.coins += sale.value;
+    state.stats.soldFish += 1;
+    runCardHook(removed, "onSell", { card: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
+    runOwnedCardsHook("onSell", { card: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
+    runOwnedCardsHook("onFishSold", { card: removed, soldCard: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
+    addLog(`替换出售「${removed.name}」，获得 ${sale.value}G。`);
+    return true;
+}
+
 function placeFishInPond(fish, cellIndex) {
     const occupied = pondOccupancy();
     const target = occupied.get(cellIndex);
@@ -30,12 +56,12 @@ function placeFishInPond(fish, cellIndex) {
     if (target) {
         const removed = target.card;
         runCardHook(removed, "onReplaceOut", { card: removed, incomingCard: fish, source: "pond" });
-        runCardHook(removed, "onDiscard", { card: removed, reason: "replaceFromPond" });
-        state.pond = state.pond.filter((card) => card.uid !== removed.uid);
+        if (!sellReplacedPondFish(removed, fish, target.start)) {
+            return false;
+        }
         state.stats.replaced += 1;
-        state.stats.discarded += 1;
         runCardHook(fish, "onReplaceIn", { card: fish, removedCard: removed, source: "pond" });
-        addLog(`「${fish.name}」放入第 ${cellIndex + 1} 格，替换了「${removed.name}」。`);
+        addLog(`「${fish.name}」放入第 ${cellIndex + 1} 格，替换并出售了「${removed.name}」。`);
     } else {
         addLog(`「${fish.name}」放入水族馆第 ${cellIndex + 1} 格。`);
     }
@@ -189,7 +215,6 @@ function handleFishButtonClick() {
     }
 
     if (state.catchChoices.length > 0) {
-        openCatchChoiceDecision();
         return;
     }
 
@@ -290,12 +315,6 @@ function cancelFishingCharge(event) {
 function handleFishButtonPointerUp(event) {
     if (stopFishingCharge(event)) {
         return;
-    }
-
-    if (!state.decisionLocked && state.catchChoices.length > 0) {
-        suppressFishClickUntil = performance.now() + 350;
-        event.preventDefault();
-        openCatchChoiceDecision();
     }
 }
 

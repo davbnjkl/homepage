@@ -454,10 +454,33 @@ button {
 .scene-badges,
 .brand-block,
 .control-grid,
-.catch-select-panel,
 .footer-bar,
 .storage-panel > .panel-heading {
     display: none;
+}
+
+.catch-select-panel {
+    display: none;
+}
+
+body.has-selected-catch .catch-select-panel {
+    position: fixed;
+    z-index: 31;
+    left: 50%;
+    bottom: max(146px, calc(env(safe-area-inset-bottom) + 146px));
+    width: min(560px, calc(100vw - 24px));
+    display: block;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+body.has-selected-catch .catch-select-panel > .section-title-row,
+body.has-selected-catch .catch-choice-area {
+    display: none;
+}
+
+body.has-selected-catch .catch-action-row {
+    pointer-events: auto;
 }
 
 .pixel-scene {
@@ -1789,6 +1812,11 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         bottom: max(8px, env(safe-area-inset-bottom));
         width: calc(100vw - 16px);
         padding: 8px;
+    }
+
+    body.has-selected-catch .catch-select-panel {
+        bottom: max(134px, calc(env(safe-area-inset-bottom) + 134px));
+        width: calc(100vw - 16px);
     }
 
     .charge-meter {
