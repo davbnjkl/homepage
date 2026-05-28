@@ -48,6 +48,7 @@ a {
 
 button {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pixel-button,
@@ -64,6 +65,9 @@ button {
     cursor: pointer;
     text-align: center;
     text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     text-shadow: 0 2px 0 #000;
     box-shadow:
         inset 0 0 0 2px rgba(111, 231, 255, 0.12),
@@ -71,6 +75,16 @@ button {
         0 4px 0 rgba(0, 0, 0, 0.62),
         0 0 18px rgba(64, 190, 255, 0.08);
     transition: transform 90ms ease-out, filter 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.pixel-button *,
+.decision-option *,
+.upgrade-cell *,
+.shop-panel,
+.shop-panel * {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .pixel-button::after,
@@ -114,6 +128,17 @@ button {
         0 0 18px rgba(255, 201, 90, 0.12);
 }
 
+.pixel-button-danger {
+    border-color: rgba(255, 107, 114, 0.88);
+    background:
+        linear-gradient(180deg, rgba(156, 48, 58, 0.96), rgba(82, 18, 28, 0.98));
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 204, 204, 0.12),
+        inset 0 -6px 0 rgba(0, 0, 0, 0.22),
+        0 4px 0 rgba(0, 0, 0, 0.62),
+        0 0 18px rgba(255, 107, 114, 0.16);
+}
+
 .pixel-button:disabled,
 .decision-option:disabled,
 .upgrade-cell:disabled {
@@ -130,6 +155,91 @@ button {
     color: #6ee7ff;
     font-size: 0.72rem;
     letter-spacing: 0;
+}
+
+/* Loading screen */
+.loading-screen {
+    position: fixed;
+    z-index: 200;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background:
+        radial-gradient(circle at 50% 28%, rgba(111, 231, 255, 0.18), transparent 30%),
+        linear-gradient(180deg, #020611 0%, #071629 52%, #02040a 100%);
+    transition: opacity 260ms ease-out, visibility 260ms ease-out;
+}
+
+.loading-screen.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-card {
+    width: min(420px, calc(100vw - 36px));
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+    padding: 24px 18px;
+    border: 3px solid rgba(111, 231, 255, 0.58);
+    background:
+        linear-gradient(180deg, rgba(10, 24, 45, 0.92), rgba(3, 8, 18, 0.96));
+    box-shadow:
+        inset 0 0 0 2px rgba(0, 0, 0, 0.7),
+        inset 0 -10px 0 rgba(0, 0, 0, 0.24),
+        0 10px 0 rgba(0, 0, 0, 0.54),
+        0 0 34px rgba(111, 231, 255, 0.14);
+    text-align: center;
+}
+
+.loading-card h1 {
+    margin: 0;
+    color: #fff3a7;
+    font-size: clamp(2rem, 11vw, 3.2rem);
+    line-height: 0.95;
+    text-shadow: 0 4px 0 #000;
+}
+
+.loading-fish {
+    width: 78px;
+    height: 38px;
+    image-rendering: pixelated;
+    background:
+        linear-gradient(90deg, transparent 0 10px, #7df3ff 10px 54px, transparent 54px),
+        linear-gradient(45deg, transparent 0 50%, #ffcf5d 50% 72%, transparent 72%),
+        linear-gradient(135deg, transparent 0 46%, #ff8f5d 46% 68%, transparent 68%);
+    clip-path: polygon(0 50%, 16% 18%, 66% 18%, 100% 0, 83% 50%, 100% 100%, 66% 82%, 16% 82%);
+    filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.6));
+    animation: loadingFishSwim 760ms steps(4, end) infinite;
+}
+
+.loading-track {
+    width: min(280px, 78vw);
+    height: 16px;
+    overflow: hidden;
+    border: 2px solid rgba(213, 247, 255, 0.5);
+    background:
+        linear-gradient(180deg, rgba(1, 5, 12, 0.96), rgba(9, 22, 36, 0.88));
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.68),
+        0 3px 0 rgba(0, 0, 0, 0.48);
+}
+
+.loading-track span {
+    display: block;
+    width: 42%;
+    height: 100%;
+    background:
+        repeating-linear-gradient(90deg, #6ee7ff 0 10px, #6fffbf 10px 20px, #ffc95a 20px 30px);
+    animation: loadingBarSlide 900ms steps(7, end) infinite;
+}
+
+.loading-card strong {
+    color: rgba(237, 250, 255, 0.86);
+    font-size: 1rem;
+    text-shadow: 0 2px 0 #000;
 }
 
 /* Main menu */
@@ -855,12 +965,66 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         0 0 16px rgba(255, 216, 90, 0.18);
 }
 
+.slot.is-place-valid {
+    cursor: pointer;
+    border-color: rgba(255, 216, 90, 0.9);
+    box-shadow:
+        inset 0 0 0 2px rgba(3, 8, 18, 0.76),
+        inset 0 7px 0 rgba(255, 255, 255, 0.08),
+        inset 0 -10px 0 rgba(0, 0, 0, 0.28),
+        0 5px 0 rgba(0, 0, 0, 0.68),
+        0 0 18px rgba(255, 216, 90, 0.32);
+}
+
+.slot.is-place-invalid {
+    cursor: not-allowed;
+    filter: grayscale(0.55) brightness(0.72);
+}
+
+.slot.is-place-valid::after,
+.slot.is-place-invalid::after {
+    content: attr(data-place-label);
+    z-index: 4;
+    left: 50%;
+    right: auto;
+    bottom: 8px;
+    width: auto;
+    height: auto;
+    min-width: 48px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 248, 196, 0.64);
+    background:
+        linear-gradient(180deg, rgba(44, 33, 10, 0.92), rgba(8, 6, 3, 0.86));
+    color: #fff4a8;
+    font-size: 0.78rem;
+    line-height: 1;
+    text-align: center;
+    text-shadow: 0 2px 0 #000;
+    transform: translateX(-50%);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.56), 0 0 12px rgba(255, 216, 90, 0.18);
+}
+
+.slot.is-place-invalid::after {
+    border-color: rgba(255, 107, 114, 0.55);
+    color: rgba(255, 206, 210, 0.86);
+    background:
+        linear-gradient(180deg, rgba(66, 18, 28, 0.88), rgba(10, 4, 8, 0.86));
+}
+
 .slot.is-combined-result .fish-card {
     animation: combinePulse 720ms steps(4, end);
 }
 
 .slot.is-placed-result .fish-card {
     animation: pondPlacePop 220ms ease-out both;
+}
+
+.slot.is-moved-result .fish-card {
+    animation: pondMoveFlash 340ms ease-out both;
+}
+
+.slot.is-effect-result .fish-card {
+    animation: effectTriggerFlash 420ms steps(3, end);
 }
 
 .slot.is-selling .fish-card {
@@ -987,6 +1151,38 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     line-height: 1.05;
 }
 
+.catch-action-row {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid rgba(255, 216, 90, 0.26);
+    background:
+        linear-gradient(180deg, rgba(42, 31, 8, 0.48), rgba(4, 10, 18, 0.58));
+    box-shadow:
+        inset 0 0 12px rgba(255, 216, 90, 0.06),
+        0 2px 0 rgba(0, 0, 0, 0.36);
+}
+
+.catch-action-row > strong {
+    color: #fff0a5;
+    font-size: 0.92rem;
+    line-height: 1.15;
+    text-shadow: 0 2px 0 #000;
+}
+
+.catch-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.catch-action-buttons .pixel-button {
+    min-height: 40px;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+}
+
 #fishButton {
     border-color: rgba(255, 216, 90, 0.92);
     background:
@@ -1000,6 +1196,10 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         inset 0 -6px 0 rgba(0, 0, 0, 0.22),
         0 4px 0 rgba(0, 0, 0, 0.62),
         0 0 22px rgba(255, 216, 90, 0.32);
+}
+
+#fishButton.is-press-too-short {
+    animation: fishButtonShake 160ms steps(2, end);
 }
 
 #upgradeCoreButton {
@@ -1614,6 +1814,26 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         font-size: clamp(0.96rem, 5.5vw, 1.28rem);
     }
 
+    .catch-action-row {
+        margin-top: 6px;
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .catch-action-row > strong {
+        font-size: 0.82rem;
+    }
+
+    .catch-action-buttons {
+        gap: 6px;
+    }
+
+    .catch-action-buttons .pixel-button {
+        min-height: 36px;
+        padding: 5px 6px;
+        font-size: 0.86rem;
+    }
+
     .decision-card {
         max-height: 94svh;
         padding: 10px;
@@ -1681,6 +1901,69 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     to {
         opacity: 0;
         transform: translateY(10px) scale(0.86);
+    }
+}
+
+@keyframes pondMoveFlash {
+    0% {
+        filter: brightness(1.65) drop-shadow(0 0 0 rgba(111, 231, 255, 0));
+        transform: translateY(-5px) scale(0.98);
+    }
+    60% {
+        filter: brightness(1.28) drop-shadow(0 0 10px rgba(111, 231, 255, 0.48));
+        transform: translateY(1px) scale(1.03);
+    }
+    100% {
+        filter: brightness(1);
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes effectTriggerFlash {
+    0%,
+    100% {
+        filter: brightness(1);
+        transform: scale(1);
+    }
+    35% {
+        filter: brightness(1.65) saturate(1.25);
+        transform: scale(1.025);
+    }
+    70% {
+        filter: brightness(1.25);
+        transform: scale(1.01);
+    }
+}
+
+@keyframes fishButtonShake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-4px);
+    }
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+@keyframes loadingFishSwim {
+    0%,
+    100% {
+        transform: translateX(-8px) translateY(0);
+    }
+    50% {
+        transform: translateX(8px) translateY(-3px);
+    }
+}
+
+@keyframes loadingBarSlide {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(245%);
     }
 }
 

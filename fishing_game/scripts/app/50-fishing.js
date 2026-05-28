@@ -1,0 +1,308 @@
+// Split from app.js: 50 fishing.
+function catchPickLimit(baitId, bait, choices) {
+    const modified = EFFECTS.modifyNumberWithCards(
+        effectSources(),
+        "modifyCatchPickCount",
+        1,
+        effectContext({ baitId, bait, choices })
+    );
+
+    return Math.max(1, Math.min(choices.length, Math.floor(modified)));
+}
+
+function clearCatchChoices() {
+    state.catchChoices = [];
+    state.selectedCatchUid = null;
+    state.catchPickLimit = 1;
+    state.catchPicksRemaining = 0;
+}
+
+function placeFishInPond(fish, cellIndex) {
+    const occupied = pondOccupancy();
+    const target = occupied.get(cellIndex);
+    const replaceUid = target?.card.uid || null;
+
+    if (!canPlacePondAt(fish, cellIndex, replaceUid)) {
+        addLog(`第 ${cellIndex + 1} 格空间不足，无法放入「${fish.name}」。`);
+        return false;
+    }
+
+    if (target) {
+        const removed = target.card;
+        runCardHook(removed, "onReplaceOut", { card: removed, incomingCard: fish, source: "pond" });
+        runCardHook(removed, "onDiscard", { card: removed, reason: "replaceFromPond" });
+        state.pond = state.pond.filter((card) => card.uid !== removed.uid);
+        state.stats.replaced += 1;
+        state.stats.discarded += 1;
+        runCardHook(fish, "onReplaceIn", { card: fish, removedCard: removed, source: "pond" });
+        addLog(`「${fish.name}」放入第 ${cellIndex + 1} 格，替换了「${removed.name}」。`);
+    } else {
+        addLog(`「${fish.name}」放入水族馆第 ${cellIndex + 1} 格。`);
+    }
+
+    fish.cellIndex = cellIndex;
+    state.pond.push(fish);
+    state.pond.sort((left, right) => (left.cellIndex || 0) - (right.cellIndex || 0));
+    state.stats.caught += 1;
+    runOwnedCardsHook("onEnterPond", { card: fish, enteringCard: fish, reason: target ? "replace" : "catch" });
+    runCardHook(fish, "onStoredAfterCatch", { caughtFish: fish, targetStorage: "pond" });
+    state.placementHighlightUid = fish.uid;
+    window.setTimeout(() => {
+        if (state.placementHighlightUid === fish.uid) {
+            state.placementHighlightUid = null;
+            render();
+        }
+    }, 260);
+    resolvePondCombines();
+    return true;
+}
+
+function finishCatchPick(fish) {
+    state.catchChoices = state.catchChoices.filter((choice) => choice.uid !== fish.uid);
+    state.catchPicksRemaining -= 1;
+
+    if (state.catchPicksRemaining <= 0) {
+        state.catchChoices.forEach((choice) => {
+            runCardHook(choice, "onDiscard", { card: choice, reason: "notChosenAfterCatch" });
+        });
+        clearCatchChoices();
+        setStatus("水族馆整理");
+        addLog("本次鱼获选择完成，未选择的鱼已放回水里。");
+        return;
+    }
+
+    state.selectedCatchUid = null;
+    setStatus(`继续选择鱼获 ${state.catchPicksRemaining}/${state.catchPickLimit}`);
+    window.setTimeout(openCatchChoiceDecision, 0);
+}
+
+function renderCatchChoiceArea() {
+    if (!elements.catchChoiceArea) {
+        return;
+    }
+
+    elements.catchChoiceArea.innerHTML = "";
+
+    if (state.catchChoices.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "catch-choice-empty";
+        empty.innerHTML = "<strong>暂无鱼获</strong><span>支付金币钓鱼后，会在这里出现 3 条鱼。</span>";
+        elements.catchChoiceArea.appendChild(empty);
+        return;
+    }
+
+    state.catchChoices.forEach((fish, index) => {
+        const isSelected = state.selectedCatchUid === fish.uid;
+        const card = document.createElement("article");
+        card.className = `catch-choice-card ${isSelected ? "is-selected" : ""}`;
+        card.style.setProperty("--choice-index", String(index));
+        card.tabIndex = 0;
+        card.innerHTML = cardTemplate(fish, "", false);
+        card.addEventListener("click", () => {
+            state.selectedCatchUid = isSelected ? null : fish.uid;
+            setStatus(state.selectedCatchUid ? "点击水族馆格子" : "选择鱼获");
+            render();
+        });
+        elements.catchChoiceArea.appendChild(card);
+    });
+}
+
+function chooseCatchFish(fish) {
+    state.selectedCatchUid = fish.uid;
+    closeDecision();
+    setStatus("点击水族馆格子");
+    addLog(`已选择「${fish.name}」，点击水族馆格子放入。`);
+    render();
+}
+
+function openCatchChoiceDecision() {
+    if (state.catchChoices.length === 0) {
+        return;
+    }
+
+    state.decisionLocked = true;
+    elements.decisionModal.hidden = false;
+    elements.decisionModal.classList.add("catch-choice-modal");
+    elements.decisionTitle.textContent = "选择本次鱼获";
+    elements.decisionCopy.textContent = `本次可选择 ${state.catchPicksRemaining}/${state.catchPickLimit} 条鱼放入水族馆。`;
+    elements.decisionPreview.innerHTML = "";
+    elements.decisionOptions.innerHTML = "";
+    elements.decisionOptions.classList.add("catch-choice-grid");
+
+    state.catchChoices.forEach((fish, index) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "catch-choice-pick";
+        option.style.setProperty("--choice-index", String(index));
+        option.innerHTML = cardTemplate(fish, "", true, { hideAction: true });
+        option.addEventListener("click", () => chooseCatchFish(fish));
+        elements.decisionOptions.appendChild(option);
+    });
+
+    render();
+}
+
+function catchFish() {
+    return catchFishWithCharge(chargeResult(0));
+}
+
+function catchFishWithCharge(charge = chargeResult(0)) {
+    const fishCost = fishingCost();
+
+    if (state.coins < fishCost || state.decisionLocked || state.catchChoices.length > 0) {
+        return;
+    }
+
+    const baitId = baitIdForLevel(state.baitLevel);
+    const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
+    state.coins -= fishCost;
+    runEventSystemHook("onCatchStart", { baitId, bait, day: state.day });
+    state.currentCatchCharge = charge;
+    const choices = drawCatchChoices(baitId);
+    runEventSystemHook("onCatchChoice", { baitId, bait, choices, day: state.day, charge });
+    state.currentCatchCharge = null;
+    state.stats.baitUsed += 1;
+    state.dailyCatchCount += 1;
+    state.catchChoices = choices;
+    state.catchPickLimit = catchPickLimit(baitId, bait, choices);
+    state.catchPicksRemaining = state.catchPickLimit;
+    state.selectedCatchUid = null;
+    elements.lastCatch.textContent = "等待放入";
+    elements.pixelScene.classList.add("is-catching");
+    setStatus("选择鱼获");
+    addLog(`支付 ${fishCost}G 使用${bait.name}钓鱼，钓上 3 条鱼，可选择 ${state.catchPickLimit} 条放入水族馆。`);
+    if (charge.isPerfect) {
+        addLog(`蓄力命中最佳区间，本次高品质鱼权重小幅提高。`);
+    }
+
+    window.setTimeout(() => {
+        elements.pixelScene.classList.remove("is-catching");
+    }, 700);
+
+    render();
+    openCatchChoiceDecision();
+}
+
+function handleFishButtonClick() {
+    if (state.decisionLocked) {
+        return;
+    }
+
+    if (state.catchChoices.length > 0) {
+        openCatchChoiceDecision();
+        return;
+    }
+
+    catchFish();
+}
+
+let suppressFishClickUntil = 0;
+
+function canStartFishingCharge() {
+    return state.gameStarted
+        && !state.decisionLocked
+        && state.catchChoices.length === 0
+        && state.coins >= fishingCost();
+}
+
+function startFishingCharge(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+        return;
+    }
+
+    if (!canStartFishingCharge()) {
+        return;
+    }
+
+    event.preventDefault();
+    elements.fishButton.setPointerCapture?.(event.pointerId);
+    state.charge.isCharging = true;
+    state.charge.startedAt = performance.now();
+    state.charge.elapsedMs = 0;
+    state.charge.pointerId = event.pointerId;
+    elements.fishButton.classList.add("is-charging");
+    updateFishingCharge();
+}
+
+function updateFishingCharge() {
+    if (!state.charge.isCharging) {
+        return;
+    }
+
+    const config = fishingChargeConfig();
+    state.charge.elapsedMs = Math.min(performance.now() - state.charge.startedAt, config.maxMs);
+    renderChargeMeter(state.charge.elapsedMs);
+    state.charge.rafId = window.requestAnimationFrame(updateFishingCharge);
+}
+
+function stopFishingCharge(event, options = {}) {
+    if (!state.charge.isCharging) {
+        return false;
+    }
+
+    if (event && state.charge.pointerId !== null && event.pointerId !== state.charge.pointerId) {
+        return false;
+    }
+
+    window.cancelAnimationFrame(state.charge.rafId);
+    const elapsed = state.charge.elapsedMs || Math.max(0, performance.now() - state.charge.startedAt);
+    const result = chargeResult(elapsed);
+
+    state.charge.isCharging = false;
+    state.charge.startedAt = 0;
+    state.charge.elapsedMs = 0;
+    state.charge.rafId = null;
+    state.charge.pointerId = null;
+    elements.fishButton.classList.remove("is-charging");
+    renderChargeMeter(0);
+
+    if (event) {
+        suppressFishClickUntil = performance.now() + 350;
+        event.preventDefault();
+    }
+
+    if (elapsed < MIN_FISH_PRESS_MS) {
+        shakeFishButton();
+        return true;
+    }
+
+    if (!options.cancel) {
+        catchFishWithCharge(result);
+    }
+
+    return true;
+}
+
+function shakeFishButton() {
+    elements.fishButton.classList.remove("is-press-too-short");
+    void elements.fishButton.offsetWidth;
+    elements.fishButton.classList.add("is-press-too-short");
+
+    window.setTimeout(() => {
+        elements.fishButton.classList.remove("is-press-too-short");
+    }, 180);
+}
+
+function cancelFishingCharge(event) {
+    stopFishingCharge(event, { cancel: true });
+}
+
+function handleFishButtonPointerUp(event) {
+    if (stopFishingCharge(event)) {
+        return;
+    }
+
+    if (!state.decisionLocked && state.catchChoices.length > 0) {
+        suppressFishClickUntil = performance.now() + 350;
+        event.preventDefault();
+        openCatchChoiceDecision();
+    }
+}
+
+function handleFishButtonFallbackClick() {
+    if (performance.now() < suppressFishClickUntil) {
+        return;
+    }
+
+    handleFishButtonClick();
+}

@@ -11,6 +11,18 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+    <section class="loading-screen" id="loadingScreen" role="status" aria-live="polite">
+        <div class="loading-card">
+            <p class="panel-kicker">LOADING AQUARIUM</p>
+            <h1>大钓鱼鱼</h1>
+            <div class="loading-fish" aria-hidden="true"></div>
+            <div class="loading-track" aria-hidden="true">
+                <span></span>
+            </div>
+            <strong id="loadingText">正在装载鱼鱼...</strong>
+        </div>
+    </section>
+
     <section class="main-menu" id="mainMenu" aria-label="主菜单">
         <div class="main-menu-inner">
             <p class="panel-kicker">ROGUELIKE FISH CARDS</p>
@@ -194,6 +206,13 @@
                         <span>选鱼后点水族馆格子</span>
                     </div>
                     <div class="catch-choice-area" id="catchChoiceArea" aria-live="polite"></div>
+                    <div class="catch-action-row" id="catchActionRow" hidden>
+                        <strong id="catchActionLabel">已选择鱼获</strong>
+                        <div class="catch-action-buttons">
+                            <button id="reselectCatchButton" type="button" class="pixel-button">重选鱼获</button>
+                            <button id="sellCatchButton" type="button" class="pixel-button pixel-button-danger">直接出售</button>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="shop-panel">
@@ -239,8 +258,23 @@
         </div>
     </div>
 
-    <script src="./game-data.js"></script>
-    <script src="./card-effects.js"></script>
-    <script src="./app.js"></script>
+    <script src="./scripts/data/core-data.js"></script>
+    <script src="./scripts/data/fish-cards.js"></script>
+    <script src="./scripts/effects/effect-core.js"></script>
+    <script src="./scripts/effects/modifier-effects.js"></script>
+    <script src="./scripts/effects/economy-sale-effects.js"></script>
+    <script src="./scripts/effects/daily-effects.js"></script>
+    <script src="./scripts/effects/enter-placement-effects.js"></script>
+    <script src="./scripts/effects/frequent-trigger-effects.js"></script>
+    <script src="./scripts/effects/combine-effects.js"></script>
+    <script src="./scripts/app/00-state.js"></script>
+    <script src="./scripts/app/10-core-utils.js"></script>
+    <script src="./scripts/app/20-economy-summary.js"></script>
+    <script src="./scripts/app/30-pond-position.js"></script>
+    <script src="./scripts/app/40-render.js"></script>
+    <script src="./scripts/app/50-fishing.js"></script>
+    <script src="./scripts/app/60-decisions-progression.js"></script>
+    <script src="./scripts/app/70-card-actions-input.js"></script>
+    <script src="./scripts/app/90-boot.js"></script>
 </body>
 </html>
