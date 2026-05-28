@@ -3,8 +3,8 @@ window.FISHING_GAME_DATA = {
         standard: {
             id: "standard",
             name: "标准模式",
-            checkpointTargets: [24, 60, 110, 180, 270],
-            checkpointTargetStep: 120
+            checkpointTargets: [12, 30, 55, 90, 135],
+            checkpointTargetStep: 60
         }
     },
     eventSystem: {
