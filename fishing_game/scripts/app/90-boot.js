@@ -45,6 +45,14 @@ function resetGame(modeId = "standard", startImmediately = true, characterId = s
     valueAnimationIntervals.forEach((intervalId) => window.clearInterval(intervalId));
     valueAnimationTimers.clear();
     valueAnimationIntervals.clear();
+    if (dayTransitionTimer) {
+        window.clearTimeout(dayTransitionTimer);
+        dayTransitionTimer = null;
+    }
+    elements.dayTransitionOverlay?.classList.remove("is-active");
+    if (elements.dayTransitionOverlay) {
+        elements.dayTransitionOverlay.hidden = true;
+    }
 
     const nextState = createInitialState(modeId, startImmediately, characterId);
 

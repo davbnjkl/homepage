@@ -99,6 +99,35 @@ function addLog(message) {
     }
 }
 
+function replayElementAnimation(element, className, duration = 320) {
+    if (!element) {
+        return;
+    }
+
+    element.classList.remove(className);
+    void element.offsetWidth;
+    element.classList.add(className);
+    window.setTimeout(() => {
+        element.classList.remove(className);
+    }, duration);
+}
+
+function pulseCoinChange() {
+    replayElementAnimation(elements.coinValue?.closest(".status-chip") || elements.coinValue, "is-hud-pulse", 360);
+}
+
+function pulseDayChange() {
+    replayElementAnimation(elements.dayValue?.closest(".status-chip") || elements.dayValue, "is-day-pulse", 360);
+}
+
+function pulsePondValue() {
+    replayElementAnimation(elements.pondValue?.closest(".status-chip") || elements.pondValue, "is-value-pulse", 420);
+}
+
+function pulseShopPanel() {
+    replayElementAnimation(elements.shopPanel, "is-sale-pulse", 260);
+}
+
 function dailyCounter(card, key) {
     if (!card.dailyCounters || card.dailyCounterDay !== state.day) {
         card.dailyCounters = {};
@@ -137,6 +166,7 @@ function addValueToCard(card, amount, options = {}) {
     card.value = (card.value || 0) + gain;
     card.valueGainedToday = (card.valueGainedToday || 0) + gain;
     queueValueAnimation(card, gain, startValue, card.value);
+    pulsePondValue();
     markEffectHighlight([card, options.sourceCard]);
 
     if (options.message) {

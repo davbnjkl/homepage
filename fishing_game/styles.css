@@ -652,6 +652,14 @@ body.has-selected-catch .catch-action-row {
     animation: bobberHit 360ms steps(3, end) 2;
 }
 
+.pixel-scene.is-casting {
+    animation: sceneCastPulse 360ms steps(4, end) both;
+}
+
+.pixel-scene.is-catching {
+    animation: sceneCatchPulse 520ms steps(5, end) both;
+}
+
 .dock,
 .reed,
 .fisherman {
@@ -793,6 +801,21 @@ body.has-selected-catch .catch-action-row {
     text-shadow: 0 2px 0 #000;
 }
 
+.status-chip.is-hud-pulse,
+.status-chip.is-day-pulse,
+.status-chip.is-value-pulse {
+    animation: hudChipPop 320ms steps(3, end) both;
+}
+
+.status-chip.is-hud-pulse strong {
+    color: #ffe08a;
+}
+
+.status-chip.is-day-pulse strong,
+.status-chip.is-value-pulse strong {
+    color: #9fffe0;
+}
+
 .status-chip:nth-child(2) strong {
     color: #ffe08a;
 }
@@ -807,15 +830,19 @@ body.has-selected-catch .catch-action-row {
     top: clamp(72px, 10.5svh, 96px);
     left: 50%;
     width: min(600px, calc(100vw - 24px));
-    padding: 10px;
-    border: 3px solid rgba(74, 255, 186, 0.56);
+    padding: 12px;
+    border: 0;
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
     background:
-        radial-gradient(circle at 52% 14%, rgba(117, 255, 207, 0.12), transparent 36%),
-        linear-gradient(180deg, rgba(11, 36, 42, 0.6), rgba(3, 10, 20, 0.46));
+        linear-gradient(90deg, rgba(145, 255, 222, 0.18), transparent 14% 86%, rgba(145, 255, 222, 0.16)),
+        radial-gradient(circle at 52% 14%, rgba(117, 255, 207, 0.14), transparent 36%),
+        linear-gradient(180deg, rgba(11, 36, 42, 0.68), rgba(3, 10, 20, 0.5));
     box-shadow:
-        0 0 0 3px rgba(0, 0, 0, 0.72),
-        inset 0 0 0 2px rgba(255, 255, 255, 0.04),
-        inset 0 0 34px rgba(70, 255, 190, 0.08),
+        0 0 0 3px rgba(0, 0, 0, 0.76),
+        inset 0 0 0 2px rgba(148, 255, 221, 0.12),
+        inset 0 8px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -10px 0 rgba(0, 0, 0, 0.22),
+        inset 0 0 34px rgba(70, 255, 190, 0.1),
         0 18px 42px rgba(0, 0, 0, 0.42);
     transform: translateX(-50%);
 }
@@ -829,6 +856,20 @@ body.has-selected-catch .catch-action-row {
         radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.12) 0 2px, transparent 3px),
         radial-gradient(circle at 72% 65%, rgba(111, 231, 255, 0.14) 0 2px, transparent 3px),
         repeating-linear-gradient(0deg, rgba(111, 231, 255, 0.04) 0 2px, transparent 2px 20px);
+    pointer-events: none;
+}
+
+.pond-section::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    height: 7px;
+    background:
+        repeating-linear-gradient(90deg, rgba(210, 255, 246, 0.32) 0 18px, transparent 18px 34px);
+    opacity: 0.55;
     pointer-events: none;
 }
 
@@ -861,7 +902,7 @@ body.has-selected-catch .catch-action-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: repeat(3, minmax(0, 1fr));
-    gap: clamp(9px, 2vw, 14px);
+    gap: clamp(10px, 2vw, 15px);
     height: min(55svh, 510px);
     perspective: 900px;
 }
@@ -870,18 +911,22 @@ body.has-selected-catch .catch-action-row {
     position: relative;
     min-width: 0;
     min-height: 0;
-    padding: 7px;
+    padding: 8px;
     overflow: hidden;
-    border: 3px solid rgba(117, 255, 207, 0.74);
+    border: 0;
+    border-radius: 8px;
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 10px, 100% calc(100% - 12px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 12px), 0 10px);
     background:
-        linear-gradient(180deg, rgba(184, 248, 255, 0.18), rgba(21, 91, 104, 0.1) 22%, rgba(2, 8, 16, 0.56) 100%);
+        linear-gradient(90deg, rgba(190, 255, 241, 0.3) 0 5px, transparent 5px calc(100% - 5px), rgba(190, 255, 241, 0.22) calc(100% - 5px)),
+        linear-gradient(180deg, rgba(210, 255, 250, 0.38) 0 6px, rgba(31, 96, 104, 0.2) 6px 18px, transparent 18px),
+        linear-gradient(180deg, rgba(184, 248, 255, 0.22), rgba(21, 91, 104, 0.12) 28%, rgba(2, 8, 16, 0.58) 100%);
     box-shadow:
-        inset 0 0 0 2px rgba(3, 8, 18, 0.76),
-        inset 0 7px 0 rgba(255, 255, 255, 0.08),
-        inset 0 -10px 0 rgba(0, 0, 0, 0.28),
-        inset 0 0 22px rgba(41, 183, 232, 0.18),
-        0 5px 0 rgba(0, 0, 0, 0.68),
-        0 0 16px rgba(70, 255, 190, 0.1);
+        inset 0 0 0 2px rgba(3, 8, 18, 0.78),
+        inset 0 0 0 4px rgba(120, 244, 228, 0.08),
+        inset 0 -13px 0 rgba(0, 0, 0, 0.28),
+        inset 0 0 24px rgba(41, 183, 232, 0.2),
+        0 6px 0 rgba(0, 0, 0, 0.68),
+        0 0 16px rgba(70, 255, 190, 0.12);
 }
 
 .slot::before,
@@ -892,32 +937,46 @@ body.has-selected-catch .catch-action-row {
 }
 
 .slot::before {
-    inset: 7px;
-    border: 1px solid rgba(186, 246, 255, 0.18);
+    z-index: 0;
+    inset: 8px 9px 11px;
+    border: 1px solid rgba(186, 246, 255, 0.2);
+    border-radius: 6px;
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 7px, 100% 100%, 0 100%, 0 7px);
     background:
-        linear-gradient(105deg, rgba(255, 255, 255, 0.2) 0 8%, transparent 8% 18%, rgba(255, 255, 255, 0.08) 18% 24%, transparent 24%),
-        linear-gradient(180deg, rgba(101, 222, 240, 0.12), rgba(3, 18, 26, 0.16));
+        linear-gradient(105deg, rgba(255, 255, 255, 0.24) 0 8%, transparent 8% 18%, rgba(255, 255, 255, 0.1) 18% 24%, transparent 24%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 14% 86%, rgba(255, 255, 255, 0.06)),
+        linear-gradient(180deg, rgba(101, 222, 240, 0.16), rgba(3, 18, 26, 0.18));
 }
 
 .slot::after {
-    left: 10px;
-    right: 10px;
-    bottom: 9px;
-    height: 9px;
+    z-index: 0;
+    left: 13px;
+    right: 13px;
+    bottom: 10px;
+    height: 13px;
+    border-radius: 50% 50% 4px 4px / 45% 45% 4px 4px;
     background:
-        repeating-linear-gradient(90deg, rgba(194, 141, 77, 0.58) 0 9px, rgba(111, 80, 54, 0.58) 9px 18px);
-    box-shadow: 0 -1px 0 rgba(255, 220, 151, 0.18);
+        radial-gradient(circle at 18% 58%, rgba(255, 216, 145, 0.72) 0 2px, transparent 3px),
+        radial-gradient(circle at 68% 42%, rgba(255, 238, 176, 0.55) 0 2px, transparent 3px),
+        repeating-linear-gradient(90deg, rgba(194, 141, 77, 0.68) 0 8px, rgba(111, 80, 54, 0.66) 8px 16px);
+    box-shadow:
+        0 -1px 0 rgba(255, 220, 151, 0.2),
+        0 2px 0 rgba(0, 0, 0, 0.22);
 }
 
 .slot-open::before {
     background:
-        radial-gradient(circle at 28% 72%, rgba(189, 250, 255, 0.42) 0 2px, transparent 3px),
-        radial-gradient(circle at 66% 58%, rgba(189, 250, 255, 0.28) 0 2px, transparent 3px),
-        linear-gradient(105deg, rgba(255, 255, 255, 0.2) 0 8%, transparent 8% 18%, rgba(255, 255, 255, 0.08) 18% 24%, transparent 24%),
-        linear-gradient(180deg, rgba(101, 222, 240, 0.12), rgba(3, 18, 26, 0.16));
+        radial-gradient(circle at 28% 72%, rgba(189, 250, 255, 0.46) 0 2px, transparent 3px),
+        radial-gradient(circle at 66% 58%, rgba(189, 250, 255, 0.3) 0 2px, transparent 3px),
+        radial-gradient(ellipse at 50% 20%, rgba(180, 255, 245, 0.18), transparent 58%),
+        linear-gradient(105deg, rgba(255, 255, 255, 0.24) 0 8%, transparent 8% 18%, rgba(255, 255, 255, 0.1) 18% 24%, transparent 24%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 14% 86%, rgba(255, 255, 255, 0.06)),
+        linear-gradient(180deg, rgba(101, 222, 240, 0.16), rgba(3, 18, 26, 0.18));
     background-size:
         46px 90px,
         58px 120px,
+        auto,
+        auto,
         auto,
         auto;
     animation: tankBubbles 5.8s linear infinite;
@@ -937,11 +996,13 @@ body.has-selected-catch .catch-action-row {
     display: grid;
     place-items: center;
     overflow: hidden;
-    border: 1px solid rgba(174, 240, 255, 0.18);
+    border: 1px solid rgba(174, 240, 255, 0.14);
+    border-radius: 5px;
+    clip-path: polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%, 0 7px);
     background:
         radial-gradient(circle at 25% 28%, rgba(255, 255, 255, 0.18) 0 2px, transparent 3px),
         radial-gradient(circle at 72% 62%, rgba(255, 255, 255, 0.13) 0 2px, transparent 3px),
-        linear-gradient(180deg, rgba(91, 215, 232, 0.18), rgba(4, 26, 36, 0.32) 52%, rgba(4, 12, 24, 0.2));
+        linear-gradient(180deg, rgba(91, 215, 232, 0.2), rgba(4, 26, 36, 0.34) 52%, rgba(4, 12, 24, 0.2));
     color: rgba(211, 248, 255, 0.5);
     font-family: "Press Start 2P", monospace;
     font-size: clamp(0.72rem, 2vw, 1.15rem);
@@ -958,7 +1019,7 @@ body.has-selected-catch .catch-action-row {
 .slot-empty::before {
     left: -20%;
     right: -20%;
-    top: 30%;
+    top: 28%;
     height: 4px;
     opacity: 0.32;
     background:
@@ -966,12 +1027,15 @@ body.has-selected-catch .catch-action-row {
 }
 
 .slot-empty::after {
-    left: 13%;
-    bottom: 14px;
-    width: 64%;
-    height: 13px;
+    left: 12%;
+    bottom: 10px;
+    width: 68%;
+    height: 14px;
     opacity: 0.65;
+    border-radius: 50% 50% 3px 3px / 45% 45% 3px 3px;
     background:
+        radial-gradient(circle at 22% 54%, #f0c47c 0 2px, transparent 3px),
+        radial-gradient(circle at 74% 42%, #d7a767 0 2px, transparent 3px),
         repeating-linear-gradient(90deg, #7a5132 0 9px, #bf8a55 9px 17px, #6e4930 17px 25px);
 }
 
@@ -979,10 +1043,15 @@ body.has-selected-catch .catch-action-row {
     display: none;
 }
 
+.slot .fish-card {
+    z-index: 2;
+}
+
 body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-empty {
     color: rgba(255, 237, 167, 0.9);
     background:
-        linear-gradient(180deg, rgba(255, 216, 90, 0.22), rgba(255, 216, 90, 0.08));
+        radial-gradient(circle at 50% 44%, rgba(255, 242, 174, 0.16), transparent 48%),
+        linear-gradient(180deg, rgba(255, 216, 90, 0.24), rgba(255, 216, 90, 0.09));
     box-shadow:
         inset 0 0 0 2px rgba(255, 216, 90, 0.42),
         0 0 16px rgba(255, 216, 90, 0.18);
@@ -990,18 +1059,22 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 
 .slot.is-place-valid {
     cursor: pointer;
-    border-color: rgba(255, 216, 90, 0.9);
     box-shadow:
         inset 0 0 0 2px rgba(3, 8, 18, 0.76),
-        inset 0 7px 0 rgba(255, 255, 255, 0.08),
-        inset 0 -10px 0 rgba(0, 0, 0, 0.28),
-        0 5px 0 rgba(0, 0, 0, 0.68),
-        0 0 18px rgba(255, 216, 90, 0.32);
+        inset 0 0 0 4px rgba(255, 216, 90, 0.16),
+        inset 0 -13px 0 rgba(0, 0, 0, 0.28),
+        0 6px 0 rgba(0, 0, 0, 0.68),
+        0 0 22px rgba(255, 216, 90, 0.34);
+    animation: placeTargetGlow 760ms ease-in-out infinite;
 }
 
 .slot.is-place-invalid {
     cursor: not-allowed;
     filter: grayscale(0.55) brightness(0.72);
+}
+
+.slot.is-invalid-tap {
+    animation: invalidSlotShake 160ms steps(2, end);
 }
 
 .slot.is-place-valid::after,
@@ -1039,7 +1112,15 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 }
 
 .slot.is-placed-result .fish-card {
-    animation: pondPlacePop 220ms ease-out both;
+    animation: pondPlacePop 420ms cubic-bezier(0.2, 1.28, 0.34, 1) both;
+}
+
+.slot.is-slot-confirm {
+    animation: slotWaterConfirm 420ms steps(4, end) both;
+}
+
+.slot.is-slot-confirm::before {
+    animation: slotSplash 420ms ease-out both;
 }
 
 .slot.is-moved-result .fish-card {
@@ -1051,7 +1132,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 }
 
 .slot.is-selling .fish-card {
-    animation: cardSellAway 180ms ease-in both;
+    animation: cardSellAway 260ms ease-in both;
 }
 
 .shop-panel {
@@ -1187,6 +1268,10 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         0 2px 0 rgba(0, 0, 0, 0.36);
 }
 
+.catch-action-row.is-selling-catch {
+    animation: catchSellFlash 220ms ease-out both;
+}
+
 .catch-action-row > strong {
     color: #fff0a5;
     font-size: 0.92rem;
@@ -1219,6 +1304,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         inset 0 -6px 0 rgba(0, 0, 0, 0.22),
         0 4px 0 rgba(0, 0, 0, 0.62),
         0 0 22px rgba(255, 216, 90, 0.32);
+    animation: fishingChargePulse 320ms ease-in-out infinite alternate;
 }
 
 #fishButton.is-press-too-short {
@@ -1229,6 +1315,10 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     border-color: rgba(91, 227, 255, 0.78);
     background:
         linear-gradient(180deg, rgba(34, 106, 137, 0.96), rgba(13, 45, 67, 0.98));
+}
+
+#upgradeCoreButton.is-upgrade-pop {
+    animation: upgradeButtonPop 360ms steps(4, end) both;
 }
 
 #advanceTimeButton {
@@ -1270,6 +1360,8 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         inset 0 -12px 0 rgba(0, 0, 0, 0.14),
         0 5px 0 rgba(0, 0, 0, 0.62),
         0 0 16px color-mix(in srgb, var(--rarity-color, #8fb1c9) 18%, transparent);
+    transform-origin: center center;
+    transition: filter 120ms ease-out, transform 120ms ease-out;
 }
 
 .fish-card::before {
@@ -1478,6 +1570,48 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     margin: 0;
 }
 
+/* Day transition */
+.day-transition-overlay {
+    position: fixed;
+    z-index: 136;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: auto;
+    background:
+        radial-gradient(circle at 50% 45%, rgba(111, 231, 255, 0.1), transparent 28%),
+        rgba(0, 0, 0, 0.72);
+}
+
+.day-transition-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.26;
+    background:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 5px),
+        linear-gradient(90deg, transparent, rgba(111, 231, 255, 0.08), transparent);
+    pointer-events: none;
+}
+
+.day-transition-overlay.is-active {
+    animation: dayTransitionFade 800ms ease-in-out both;
+}
+
+.day-transition-overlay strong {
+    position: relative;
+    z-index: 1;
+    color: #fff7d0;
+    font-size: clamp(2.8rem, 13vw, 6.4rem);
+    line-height: 1;
+    letter-spacing: 0;
+    text-shadow:
+        0 5px 0 #000,
+        0 0 22px rgba(255, 216, 90, 0.38),
+        0 0 34px rgba(111, 231, 255, 0.22);
+    animation: dayTitleRise 800ms cubic-bezier(0.18, 1.08, 0.28, 1) both;
+}
+
 /* Decision modal */
 .decision-modal {
     position: fixed;
@@ -1490,6 +1624,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         radial-gradient(circle at 50% 25%, rgba(111, 231, 255, 0.12), transparent 28%),
         rgba(2, 4, 10, 0.76);
     backdrop-filter: blur(2px);
+    animation: modalBackdropIn 140ms ease-out both;
 }
 
 .decision-card {
@@ -1507,6 +1642,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         0 18px 44px rgba(0, 0, 0, 0.64),
         inset 0 0 0 2px rgba(255, 255, 255, 0.04),
         inset 0 0 26px rgba(111, 231, 255, 0.08);
+    animation: modalCardIn 180ms cubic-bezier(0.2, 1.18, 0.34, 1) both;
 }
 
 .decision-card .panel-heading {
@@ -1545,13 +1681,22 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     background: transparent;
     color: inherit;
     cursor: pointer;
-    animation: catchQuickReveal 180ms ease-out both;
-    animation-delay: calc(var(--choice-index, 0) * 42ms);
+    transform-origin: center 58%;
+    animation: catchCardFlip 260ms cubic-bezier(0.2, 1.18, 0.34, 1) both;
+    animation-delay: calc(var(--choice-index, 0) * 48ms);
 }
 
 .catch-choice-pick:hover .fish-card {
     filter: brightness(1.12);
     transform: translateY(-2px);
+}
+
+.catch-choice-pick.is-picked {
+    pointer-events: none;
+}
+
+.catch-choice-pick.is-picked .fish-card {
+    animation: catchCardPicked 150ms ease-out both;
 }
 
 .catch-choice-pick .fish-card {
@@ -1911,24 +2056,121 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     }
 }
 
-@keyframes pondPlacePop {
+@keyframes catchCardFlip {
     0% {
-        opacity: 0.4;
-        transform: scale(0.9);
+        opacity: 0;
+        transform: translateY(12px) rotateX(64deg) scale(0.92);
+        filter: brightness(0.78);
     }
-    70% {
-        transform: scale(1.04);
+    58% {
+        opacity: 1;
+        transform: translateY(-2px) rotateX(-8deg) scale(1.02);
+        filter: brightness(1.18);
     }
     100% {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg) scale(1);
+        filter: brightness(1);
+    }
+}
+
+@keyframes catchCardPicked {
+    0% {
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+    100% {
+        transform: translateY(-8px) scale(1.05);
+        filter: brightness(1.35) drop-shadow(0 0 12px rgba(255, 216, 90, 0.4));
+    }
+}
+
+@keyframes pondPlacePop {
+    0% {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.82) rotate(-2deg);
+        filter: brightness(1.45);
+    }
+    45% {
+        opacity: 1;
+        transform: translateY(2px) scale(1.07) rotate(1deg);
+    }
+    70% {
+        transform: translateY(-1px) scale(1.02) rotate(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+}
+
+@keyframes cardSellAway {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: brightness(1);
+    }
+    35% {
+        opacity: 1;
+        transform: translateY(-6px) rotate(-2deg) scale(1.04);
+        filter: brightness(1.32);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(16px) rotate(5deg) scale(0.76);
+        filter: brightness(0.72);
+    }
+}
+
+@keyframes slotWaterConfirm {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    42% {
+        filter: brightness(1.34) saturate(1.12);
+        box-shadow:
+            inset 0 0 0 2px rgba(3, 8, 18, 0.76),
+            inset 0 0 0 4px rgba(111, 255, 191, 0.18),
+            inset 0 -13px 0 rgba(0, 0, 0, 0.28),
+            0 6px 0 rgba(0, 0, 0, 0.68),
+            0 0 22px rgba(111, 255, 191, 0.34);
+    }
+}
+
+@keyframes slotSplash {
+    0% {
+        background-position:
+            0 0,
+            0 0,
+            0 0,
+            0 0,
+            0 0,
+            0 0;
+        opacity: 0.72;
+        transform: scale(0.94);
+    }
+    100% {
+        background-position:
+            0 -38px,
+            0 -52px,
+            0 0,
+            0 0,
+            0 0,
+            0 0;
         opacity: 1;
         transform: scale(1);
     }
 }
 
-@keyframes cardSellAway {
-    to {
-        opacity: 0;
-        transform: translateY(10px) scale(0.86);
+@keyframes placeTargetGlow {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.16);
     }
 }
 
@@ -1973,6 +2215,138 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     }
     75% {
         transform: translateX(4px);
+    }
+}
+
+@keyframes invalidSlotShake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-3px);
+    }
+    75% {
+        transform: translateX(3px);
+    }
+}
+
+@keyframes fishingChargePulse {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-1px);
+    }
+}
+
+@keyframes upgradeButtonPop {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+    45% {
+        transform: translateY(-2px) scale(1.04);
+        filter: brightness(1.34);
+    }
+}
+
+@keyframes hudChipPop {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+    45% {
+        transform: translateY(-2px) scale(1.06);
+        filter: brightness(1.4);
+    }
+}
+
+@keyframes catchSellFlash {
+    0%,
+    100% {
+        transform: translateY(0);
+        filter: brightness(1);
+    }
+    45% {
+        transform: translateY(-4px);
+        filter: brightness(1.32);
+    }
+}
+
+@keyframes modalBackdropIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalCardIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.96);
+        filter: brightness(0.86);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+}
+
+@keyframes dayTransitionFade {
+    0% {
+        opacity: 0;
+    }
+    18%,
+    72% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes dayTitleRise {
+    0% {
+        opacity: 0;
+        transform: translateY(16px) scale(0.9);
+        filter: brightness(0.8);
+    }
+    26%,
+    68% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: brightness(1.18);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-12px) scale(1.04);
+        filter: brightness(1);
+    }
+}
+
+@keyframes sceneCastPulse {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.12);
+    }
+}
+
+@keyframes sceneCatchPulse {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    40% {
+        filter: brightness(1.22) saturate(1.18);
     }
 }
 
@@ -2099,12 +2473,16 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
             0 0,
             0 0,
             0 0,
+            0 0,
+            0 0,
             0 0;
     }
     to {
         background-position:
             0 -90px,
             0 -120px,
+            0 0,
+            0 0,
             0 0,
             0 0;
     }

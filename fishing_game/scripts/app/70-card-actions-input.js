@@ -122,7 +122,7 @@ function sellFish(source, index) {
     state.selectedCard = null;
     state.sellingCardUid = soldUid;
     state.decisionLocked = true;
-    elements.shopPanel.classList.add("is-sale-pulse");
+    pulseShopPanel();
     render();
 
     window.setTimeout(() => {
@@ -133,6 +133,8 @@ function sellFish(source, index) {
             const soldCellIndex = currentCollection[currentIndex].cellIndex;
             currentCollection.splice(currentIndex, 1);
             state.coins += sale.value;
+            pulseCoinChange();
+            pulsePondValue();
             state.stats.soldFish += 1;
             runCardHook(fish, "onSell", { card: fish, sale, soldCellIndex });
             runOwnedCardsHook("onSell", { card: fish, sale, soldCellIndex });
@@ -144,7 +146,7 @@ function sellFish(source, index) {
         state.decisionLocked = false;
         elements.shopPanel.classList.remove("is-sale-pulse");
         render();
-    }, 180);
+    }, 260);
 }
 
 function sellSelectedCatchFish() {
@@ -177,15 +179,25 @@ function sellSelectedCatchFish() {
         return;
     }
 
-    state.coins += sale.value;
-    state.stats.soldFish += 1;
-    runCardHook(fish, "onSell", { card: fish, sale, soldCellIndex: null, directFromCatch: true });
-    runOwnedCardsHook("onSell", { card: fish, sale, soldCellIndex: null, directFromCatch: true });
-    runOwnedCardsHook("onFishSold", { card: fish, soldCard: fish, sale, soldCellIndex: null, directFromCatch: true });
-    elements.lastCatch.textContent = `${fish.name} 已出售`;
-    addLog(`直接卖出鱼获「${fish.name}」，获得 ${sale.value}G。`);
-    finishCatchPick(fish);
+    state.decisionLocked = true;
+    elements.catchActionRow?.classList.add("is-selling-catch");
+    pulseShopPanel();
     render();
+
+    window.setTimeout(() => {
+        state.coins += sale.value;
+        pulseCoinChange();
+        state.stats.soldFish += 1;
+        runCardHook(fish, "onSell", { card: fish, sale, soldCellIndex: null, directFromCatch: true });
+        runOwnedCardsHook("onSell", { card: fish, sale, soldCellIndex: null, directFromCatch: true });
+        runOwnedCardsHook("onFishSold", { card: fish, soldCard: fish, sale, soldCellIndex: null, directFromCatch: true });
+        elements.lastCatch.textContent = `${fish.name} 已出售`;
+        elements.catchActionRow?.classList.remove("is-selling-catch");
+        state.decisionLocked = false;
+        addLog(`直接卖出鱼获「${fish.name}」，获得 ${sale.value}G。`);
+        finishCatchPick(fish);
+        render();
+    }, 180);
 }
 
 function handleAdvanceButtonClick() {
@@ -247,6 +259,8 @@ function handleCardClick(event, storage) {
             elements.lastCatch.textContent = fish.name;
             finishCatchPick(fish);
             render();
+        } else {
+            replayElementAnimation(slot, "is-invalid-tap", 180);
         }
         return;
     }

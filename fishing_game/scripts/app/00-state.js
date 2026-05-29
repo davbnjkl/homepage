@@ -44,6 +44,8 @@ const elements = {
     advanceTimeButton: document.getElementById("advanceTimeButton"),
     upgradeCoreButton: document.getElementById("upgradeCoreButton"),
     shopPanel: document.querySelector(".shop-panel"),
+    dayTransitionOverlay: document.getElementById("dayTransitionOverlay"),
+    dayTransitionText: document.getElementById("dayTransitionText"),
     decisionModal: document.getElementById("decisionModal"),
     decisionTitle: document.getElementById("decisionTitle"),
     decisionCopy: document.getElementById("decisionCopy"),
@@ -96,11 +98,14 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
         pondUpgradeDay: 0,
         activeEvents: [],
         decisionLocked: false,
+        dayTransitioning: false,
+        dayTransitionToken: 0,
         dragData: null,
         selectedCard: null,
         lastCheckpointDay: 0,
         combineHighlightUid: null,
         placementHighlightUid: null,
+        placementHighlightCellIndex: null,
         movementHighlightUids: [],
         effectHighlightUids: [],
         sellingCardUid: null,
@@ -125,5 +130,6 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
 
 const valueAnimationTimers = new Map();
 const valueAnimationIntervals = new Map();
+let dayTransitionTimer = null;
 
 const state = createInitialState("standard", false);

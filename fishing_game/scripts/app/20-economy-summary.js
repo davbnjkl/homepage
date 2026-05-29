@@ -174,6 +174,7 @@ function gainBaseDailyCoins() {
     }
 
     state.coins += dailyCoins;
+    pulseCoinChange();
     addLog(`每日收入：获得 ${dailyCoins}G。`);
 }
 

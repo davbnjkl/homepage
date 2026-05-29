@@ -35,6 +35,8 @@ function sellReplacedPondFish(removed, incomingCard, cellIndex) {
 
     state.pond = state.pond.filter((card) => card.uid !== removed.uid);
     state.coins += sale.value;
+    pulseCoinChange();
+    pulseShopPanel();
     state.stats.soldFish += 1;
     runCardHook(removed, "onSell", { card: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
     runOwnedCardsHook("onSell", { card: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
@@ -70,15 +72,18 @@ function placeFishInPond(fish, cellIndex) {
     state.pond.push(fish);
     state.pond.sort((left, right) => (left.cellIndex || 0) - (right.cellIndex || 0));
     state.stats.caught += 1;
+    pulsePondValue();
     runOwnedCardsHook("onEnterPond", { card: fish, enteringCard: fish, reason: target ? "replace" : "catch" });
     runCardHook(fish, "onStoredAfterCatch", { caughtFish: fish, targetStorage: "pond" });
     state.placementHighlightUid = fish.uid;
+    state.placementHighlightCellIndex = cellIndex;
     window.setTimeout(() => {
         if (state.placementHighlightUid === fish.uid) {
             state.placementHighlightUid = null;
+            state.placementHighlightCellIndex = null;
             render();
         }
-    }, 260);
+    }, 520);
     resolvePondCombines();
     return true;
 }
@@ -161,7 +166,14 @@ function openCatchChoiceDecision() {
         option.className = "catch-choice-pick";
         option.style.setProperty("--choice-index", String(index));
         option.innerHTML = cardTemplate(fish, "", true, { hideAction: true });
-        option.addEventListener("click", () => chooseCatchFish(fish));
+        option.addEventListener("click", () => {
+            if (option.classList.contains("is-picked")) {
+                return;
+            }
+
+            option.classList.add("is-picked");
+            window.setTimeout(() => chooseCatchFish(fish), 150);
+        });
         elements.decisionOptions.appendChild(option);
     });
 
@@ -182,6 +194,7 @@ function catchFishWithCharge(charge = chargeResult(0)) {
     const baitId = baitIdForLevel(state.baitLevel);
     const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
     state.coins -= fishCost;
+    pulseCoinChange();
     runEventSystemHook("onCatchStart", { baitId, bait, day: state.day });
     state.currentCatchCharge = charge;
     const choices = drawCatchChoices(baitId);
@@ -193,20 +206,34 @@ function catchFishWithCharge(charge = chargeResult(0)) {
     state.catchPickLimit = catchPickLimit(baitId, bait, choices);
     state.catchPicksRemaining = state.catchPickLimit;
     state.selectedCatchUid = null;
+    state.decisionLocked = true;
     elements.lastCatch.textContent = "等待放入";
-    elements.pixelScene.classList.add("is-catching");
-    setStatus("选择鱼获");
+    elements.pixelScene.classList.add("is-casting");
+    setStatus("抛竿中");
     addLog(`支付 ${fishCost}G 使用${bait.name}钓鱼，钓上 3 条鱼，可选择 ${state.catchPickLimit} 条放入水族馆。`);
     if (charge.isPerfect) {
         addLog(`蓄力命中最佳区间，本次高品质鱼权重小幅提高。`);
     }
 
-    window.setTimeout(() => {
-        elements.pixelScene.classList.remove("is-catching");
-    }, 700);
-
     render();
-    openCatchChoiceDecision();
+
+    window.setTimeout(() => {
+        if (state.catchChoices.length === 0 || state.selectedCatchUid) {
+            elements.pixelScene.classList.remove("is-casting");
+            state.decisionLocked = false;
+            render();
+            return;
+        }
+
+        elements.pixelScene.classList.remove("is-casting");
+        elements.pixelScene.classList.add("is-catching");
+        setStatus("鱼获上钩");
+        openCatchChoiceDecision();
+
+        window.setTimeout(() => {
+            elements.pixelScene.classList.remove("is-catching");
+        }, 520);
+    }, 360);
 }
 
 function handleFishButtonClick() {

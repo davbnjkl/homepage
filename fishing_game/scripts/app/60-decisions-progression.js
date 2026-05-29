@@ -146,6 +146,9 @@ function openCheckpointDecision() {
 
 function completeDayAdvance() {
     state.day += 1;
+    pulseDayChange();
+    state.decisionLocked = true;
+    state.dayTransitioning = true;
     state.dailyCatchCount = 0;
     resetDailyCardState();
     clearCatchChoices();
@@ -156,6 +159,41 @@ function completeDayAdvance() {
         addLog(`结算提醒：明天结束需要水族馆总价值达到 ${nextCheckpointTarget()}，当前为 ${pondTotalValue()}。`);
     }
     render();
+    showDayTransition(state.day);
+}
+
+function showDayTransition(day) {
+    if (!elements.dayTransitionOverlay || !elements.dayTransitionText) {
+        state.decisionLocked = false;
+        state.dayTransitioning = false;
+        render();
+        return;
+    }
+
+    if (dayTransitionTimer) {
+        window.clearTimeout(dayTransitionTimer);
+    }
+
+    const token = (state.dayTransitionToken || 0) + 1;
+    state.dayTransitionToken = token;
+    elements.dayTransitionText.textContent = `第 ${day} 天`;
+    elements.dayTransitionOverlay.hidden = false;
+    elements.dayTransitionOverlay.classList.remove("is-active");
+    void elements.dayTransitionOverlay.offsetWidth;
+    elements.dayTransitionOverlay.classList.add("is-active");
+
+    dayTransitionTimer = window.setTimeout(() => {
+        if (state.dayTransitionToken !== token) {
+            return;
+        }
+
+        elements.dayTransitionOverlay.classList.remove("is-active");
+        elements.dayTransitionOverlay.hidden = true;
+        state.decisionLocked = false;
+        state.dayTransitioning = false;
+        dayTransitionTimer = null;
+        render();
+    }, 800);
 }
 
 function openPondUpgradeAtDayEnd() {
@@ -202,6 +240,8 @@ function openCoreUpgrade() {
 
     state.coins -= cost;
     state.baitLevel = Math.min(maxBaitLevel, state.baitLevel + 1);
+    replayElementAnimation(elements.upgradeCoreButton, "is-upgrade-pop", 360);
+    pulseCoinChange();
     addLog(`饵料升级：之后购买和每日获得的饵料提升到 Lv.${state.baitLevel}。`);
     render();
 }

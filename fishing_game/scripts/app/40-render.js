@@ -187,6 +187,7 @@ function renderStorageGrid(grid, storage) {
             slot.dataset.cardIndex = String(entry.index);
             slot.draggable = !state.decisionLocked && canDragStorageCards();
             slot.classList.toggle("is-selected", isSelected);
+            slot.classList.toggle("is-slot-confirm", state.placementHighlightCellIndex === cellIndex);
             slot.classList.toggle("is-combined-result", isCombined);
             slot.classList.toggle("is-placed-result", isPlaced);
             slot.classList.toggle("is-moved-result", isMoved);
