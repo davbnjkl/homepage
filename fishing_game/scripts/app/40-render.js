@@ -79,11 +79,15 @@ function cardDetailTemplate(fish) {
 
 function cardTemplate(fish, controls = "", expanded = false, options = {}) {
     const rarityColor = fish.rarityColor || DATA.rarityColors?.[fish.rarity] || "#8fb1c9";
+    const frameRarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"].includes(fish.rarity)
+        ? fish.rarity
+        : "common";
     const star = Math.max(1, Math.floor(fish.star || 1));
     const starIcons = "★".repeat(star);
     const starClass = star >= 3 ? " is-rainbow" : "";
     const artClass = fish.art ? " has-art" : "";
     const artStyle = fish.art ? ` --fish-art:url('${fish.art}');` : "";
+    const frameStyle = ` --card-frame:url('./assets/cards/card-frame-${frameRarity}.png');`;
     const expandedClass = expanded ? " is-expanded" : "";
     const valueAnimation = state.valueAnimations?.[fish.uid];
     const isValueAnimating = valueAnimation && valueAnimation.until > Date.now();
@@ -93,7 +97,7 @@ function cardTemplate(fish, controls = "", expanded = false, options = {}) {
     const valueGain = isValueAnimating ? ` data-gain="+${valueAnimation.gain}"` : "";
 
     return `
-        <div class="fish-card${starClass}${artClass}${expandedClass}" data-card-uid="${fish.uid || ""}" style="--fish-color:${fish.color}; --rarity-color:${rarityColor};${artStyle}">
+        <div class="fish-card${starClass}${artClass}${expandedClass}" data-card-uid="${fish.uid || ""}" style="--fish-color:${fish.color}; --rarity-color:${rarityColor};${frameStyle}${artStyle}">
             <div class="fish-card-header">
                 <strong class="fish-name">${fish.name}</strong>
                 <span class="fish-stars" aria-label="${star}星">${starIcons}</span>

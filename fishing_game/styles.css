@@ -1362,55 +1362,35 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     height: 100%;
     min-height: 118px;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 5px;
-    padding: 8px 8px 10px;
+    grid-template-rows: 18% minmax(0, 50%) minmax(0, 24%);
+    gap: 0;
+    padding: 7.5% 9% 8.5%;
     overflow: hidden;
-    border: 4px solid var(--rarity-color, #8fb1c9);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 12%) padding-box,
-        radial-gradient(circle at 50% 42%, rgba(111, 231, 255, 0.12), transparent 42%) padding-box,
-        linear-gradient(180deg, rgba(18, 31, 55, 0.98), rgba(5, 10, 20, 0.98)) padding-box;
+    border: 0;
+    background: var(--card-frame) center / 100% 100% no-repeat;
     color: var(--text);
-    box-shadow:
-        inset 0 0 0 2px rgba(1, 5, 12, 0.78),
-        inset 0 0 0 4px rgba(255, 255, 255, 0.05),
-        inset 0 -12px 0 rgba(0, 0, 0, 0.14),
-        0 5px 0 rgba(0, 0, 0, 0.62),
-        0 0 16px color-mix(in srgb, var(--rarity-color, #8fb1c9) 18%, transparent);
+    filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.44));
+    isolation: isolate;
     transform-origin: center center;
     backface-visibility: hidden;
     contain: paint;
     transition: filter 120ms ease-out, transform 120ms ease-out;
 }
 
-.fish-card::before {
-    content: "";
-    position: absolute;
-    inset: 7px 7px auto;
-    height: 12px;
-    border-top: 2px solid rgba(255, 255, 255, 0.18);
-    background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.22), transparent 35% 65%, rgba(255, 255, 255, 0.08));
-    pointer-events: none;
-}
-
 .fish-card::after {
     content: "";
     position: absolute;
-    inset: auto 8px 7px;
-    height: 5px;
-    background:
-        linear-gradient(90deg, transparent, color-mix(in srgb, var(--rarity-color, #8fb1c9) 64%, transparent), transparent);
+    inset: 2.5% 4%;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 22% 100%);
+    opacity: 0.5;
     pointer-events: none;
 }
 
 .fish-card.is-rainbow {
-    border-color: transparent;
-    background:
-        radial-gradient(circle at 50% 42%, rgba(111, 231, 255, 0.12), transparent 42%) padding-box,
-        linear-gradient(180deg, rgba(14, 24, 44, 0.96), rgba(6, 10, 20, 0.98)) padding-box,
-        linear-gradient(135deg, #fff, #51d96b, #4d91ff, #9b5cff, #ff9f43, #ff4d5f) border-box;
+    filter:
+        drop-shadow(0 4px 0 rgba(0, 0, 0, 0.44))
+        drop-shadow(0 0 10px rgba(255, 245, 176, 0.26));
 }
 
 .fish-card-header {
@@ -1421,18 +1401,15 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     justify-content: space-between;
     gap: 4px;
     min-width: 0;
-    margin: -1px -1px 0;
-    padding: 4px 5px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--rarity-color, #8fb1c9) 20%, rgba(15, 25, 43, 0.94)), rgba(4, 9, 18, 0.72));
+    margin: 0 5%;
+    padding: 4% 3% 0;
 }
 
 .fish-name {
     min-width: 0;
     overflow: hidden;
     color: #f8fdff;
-    font-size: clamp(0.84rem, 2.3vw, 1rem);
+    font-size: clamp(0.72rem, 2vw, 0.94rem);
     line-height: 1.05;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1442,7 +1419,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 .fish-stars {
     flex: 0 0 auto;
     color: #ffd95a;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     line-height: 1;
     text-shadow: 0 2px 0 #000;
     padding-left: 4px;
@@ -1458,10 +1435,10 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 .fish-sprite {
     position: relative;
     z-index: 1;
-    min-height: 54px;
-    margin: 0;
-    padding-bottom: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 0;
+    margin: 2% 4% 0;
+    padding-bottom: 0;
+    border: 0;
     background:
         radial-gradient(circle at 50% 60%, rgba(111, 231, 255, 0.12), transparent 58%),
         radial-gradient(circle at 65% 42%, rgba(255, 255, 255, 0.52) 0 3px, transparent 4px),
@@ -1471,41 +1448,33 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     background-repeat: no-repeat;
     background-position: center;
     background-size: 100% 100%, 72% 45%, 68% 54%, 24% 48%, 100% 100%;
-    filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.32));
+    filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.28));
 }
 
 .fish-card.has-art .fish-sprite {
-    background:
-        radial-gradient(circle at 50% 62%, rgba(111, 231, 255, 0.15), transparent 60%),
-        linear-gradient(180deg, rgba(18, 35, 58, 0.52), rgba(3, 7, 14, 0.38)),
-        var(--fish-art) center / contain no-repeat;
+    background: var(--fish-art) center / contain no-repeat;
 }
 
 .fish-value {
     position: absolute;
     z-index: 3;
-    right: 8px;
-    bottom: 8px;
-    width: clamp(25px, 7.2vw, 36px);
+    right: 9.5%;
+    bottom: 8.8%;
+    width: clamp(24px, 7vw, 38px);
     aspect-ratio: 1;
     display: grid;
     place-items: center;
     min-width: 0;
     padding: 0;
-    border: 2px solid rgba(255, 240, 160, 0.72);
+    border: 0;
     border-radius: 999px;
-    background:
-        radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.46), transparent 22%),
-        linear-gradient(180deg, #ffdc62, #a86d12);
+    background: transparent;
     color: #fff9c6;
     font-family: "Press Start 2P", monospace;
     font-size: clamp(0.64rem, 1.85vw, 0.88rem);
     line-height: 1;
     text-shadow: 0 2px 0 #000;
-    box-shadow:
-        inset 0 0 0 2px rgba(84, 42, 2, 0.38),
-        0 2px 0 rgba(0, 0, 0, 0.6),
-        0 0 12px rgba(255, 216, 90, 0.18);
+    box-shadow: none;
     transform-style: preserve-3d;
     perspective: 120px;
 }
@@ -1551,8 +1520,8 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 .fish-card.is-expanded {
     height: var(--expanded-card-height, 280px);
     min-height: var(--expanded-card-height, 280px);
-    grid-template-rows: auto minmax(86px, 1fr) minmax(98px, 0.82fr);
-    padding: 8px;
+    grid-template-rows: 16% minmax(82px, 47%) minmax(92px, 29%);
+    padding: 7.5% 9% 8.5%;
 }
 
 .fish-card.is-expanded .fish-name {
@@ -1564,25 +1533,23 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     z-index: 1;
     display: grid;
     align-content: start;
-    gap: 6px;
-    margin-top: 4px;
-    padding: 6px;
-    border: 1px solid rgba(111, 231, 255, 0.14);
-    background: rgba(2, 8, 16, 0.28);
-    color: var(--muted);
-    font-size: 0.95rem;
-    line-height: 1.35;
-    overflow: auto;
-    scrollbar-width: thin;
+    gap: 4px;
+    min-height: 0;
+    margin: 0 5%;
+    padding: 1px 34px 0 2px;
+    color: #cfe5f0;
+    font-size: clamp(0.72rem, 1.85vw, 0.9rem);
+    line-height: 1.22;
+    overflow: hidden;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.88);
 }
 
 .fish-detail-race {
     justify-self: start;
     margin: 0;
-    padding: 2px 6px;
-    border: 1px solid rgba(111, 231, 255, 0.5);
-    background: rgba(111, 231, 255, 0.14);
+    padding: 0;
     color: #6ee7ff;
+    font-size: 0.86em;
     line-height: 1.2;
 }
 
@@ -1950,8 +1917,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 
     .fish-card {
         min-height: 88px;
-        padding: 5px;
-        border-width: 2px;
+        padding: 7.5% 9% 8.5%;
     }
 
     .fish-name {
@@ -1963,15 +1929,15 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     }
 
     .fish-sprite {
-        min-height: 38px;
-        padding-bottom: 10px;
+        min-height: 0;
+        margin: 2% 4% 0;
+        padding-bottom: 0;
     }
 
     .fish-value {
-        right: 5px;
-        bottom: 5px;
-        width: 25px;
-        border-width: 1px;
+        right: 9.5%;
+        bottom: 8.8%;
+        width: clamp(22px, 6.5vw, 30px);
         font-size: 0.58rem;
     }
 

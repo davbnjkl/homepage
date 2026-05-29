@@ -107,7 +107,13 @@ function assetUrlsForLoading() {
     const urls = new Set([
         "./assets/backgrounds/aquarium-main.png",
         "./assets/characters/tide-avatar.png",
-        "./assets/characters/tide-art.png"
+        "./assets/characters/tide-art.png",
+        "./assets/cards/card-frame-common.png",
+        "./assets/cards/card-frame-uncommon.png",
+        "./assets/cards/card-frame-rare.png",
+        "./assets/cards/card-frame-epic.png",
+        "./assets/cards/card-frame-legendary.png",
+        "./assets/cards/card-frame-mythic.png"
     ]);
 
     Object.values(DATA.characters || {}).forEach((character) => {
