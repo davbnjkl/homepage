@@ -1066,6 +1066,28 @@ body.has-selected-catch .catch-action-row {
     z-index: 2;
 }
 
+.slot .fish-card-header {
+    justify-content: flex-end;
+    margin: 0 7%;
+    padding-top: 2.5%;
+}
+
+.slot .fish-name {
+    display: none;
+}
+
+.slot .fish-stars {
+    padding-left: 0;
+    font-size: clamp(0.62rem, 1.8vw, 0.76rem);
+}
+
+.slot .fish-value {
+    right: 11%;
+    bottom: 10%;
+    width: clamp(20px, 4.7vw, 28px);
+    font-size: clamp(0.56rem, 1.35vw, 0.7rem);
+}
+
 body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-empty {
     color: rgba(255, 237, 167, 0.9);
     background:
@@ -1693,11 +1715,6 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     min-height: 190px;
 }
 
-.decision-modal.card-detail-modal .decision-preview {
-    width: min(280px, 100%);
-    margin-inline: auto;
-}
-
 .decision-modal.tutorial-modal .decision-preview {
     width: min(680px, 100%);
 }
@@ -1738,12 +1755,83 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     justify-self: center;
 }
 
+.decision-modal.card-detail-modal .decision-options.card-detail-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.decision-modal.card-detail-modal .decision-card {
+    width: min(420px, calc(100vw - 24px));
+    max-height: 96svh;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 12px;
+}
+
+.decision-modal.card-detail-modal .panel-heading,
+.decision-modal.card-detail-modal .decision-copy {
+    display: none;
+}
+
+.decision-modal.card-detail-modal .decision-preview {
+    width: min(340px, calc(100vw - 34px));
+    margin-inline: auto;
+}
+
 .decision-modal.card-detail-modal .fish-card {
-    --expanded-card-height: 340px;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 3 / 4;
+    grid-template-rows: 15.5% minmax(0, 50%) minmax(0, 26%);
+    padding: 7.2% 8.6% 8.4%;
+    filter:
+        drop-shadow(0 7px 0 rgba(0, 0, 0, 0.46))
+        drop-shadow(0 16px 26px rgba(0, 0, 0, 0.42));
+}
+
+.decision-modal.card-detail-modal .fish-card-header {
+    align-items: center;
+    margin: 0 6%;
+    padding: 2.5% 4% 0;
+}
+
+.decision-modal.card-detail-modal .fish-name {
+    font-size: clamp(0.86rem, 3.1vw, 1.16rem);
+    line-height: 1;
+}
+
+.decision-modal.card-detail-modal .fish-stars {
+    font-size: clamp(0.78rem, 2.8vw, 1.04rem);
+}
+
+.decision-modal.card-detail-modal .fish-sprite {
+    margin: 1.5% 5.5% 0;
+}
+
+.decision-modal.card-detail-modal .fish-detail {
+    margin: 0 6%;
+    padding: 7% 17% 0 2%;
+    font-size: clamp(0.78rem, 2.7vw, 0.98rem);
+    line-height: 1.2;
+}
+
+.decision-modal.card-detail-modal .fish-detail-race {
+    font-size: 0.88em;
+}
+
+.decision-modal.card-detail-modal .fish-value {
+    right: 9.3%;
+    bottom: 8.9%;
+    width: clamp(42px, 12.5vw, 58px);
+    font-size: clamp(0.9rem, 3.5vw, 1.22rem);
 }
 
 .decision-modal.card-detail-modal .decision-options.card-detail-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(420px, calc(100vw - 24px));
+    margin-inline: auto;
 }
 
 .decision-option {
@@ -2000,6 +2088,13 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         padding: 10px;
     }
 
+    .decision-modal.card-detail-modal .decision-card {
+        width: min(380px, calc(100vw - 18px));
+        max-height: 96svh;
+        padding: 0;
+        gap: 9px;
+    }
+
     .decision-modal.catch-choice-modal .decision-options.catch-choice-grid {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -2024,7 +2119,31 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     }
 
     .decision-modal.card-detail-modal .fish-card {
-        --expanded-card-height: 330px;
+        height: auto;
+        min-height: 0;
+        aspect-ratio: 3 / 4;
+    }
+
+    .decision-modal.card-detail-modal .decision-preview {
+        width: min(310px, calc(100vw - 28px));
+    }
+
+    .decision-modal.card-detail-modal .fish-name {
+        font-size: clamp(0.8rem, 4.1vw, 1rem);
+    }
+
+    .decision-modal.card-detail-modal .fish-stars {
+        font-size: clamp(0.72rem, 3.8vw, 0.92rem);
+    }
+
+    .decision-modal.card-detail-modal .fish-detail {
+        padding-right: 18%;
+        font-size: clamp(0.72rem, 3.4vw, 0.9rem);
+    }
+
+    .decision-modal.card-detail-modal .fish-value {
+        width: clamp(38px, 13vw, 50px);
+        font-size: clamp(0.78rem, 4vw, 1rem);
     }
 
     .decision-modal.card-detail-modal .decision-options.card-detail-actions,

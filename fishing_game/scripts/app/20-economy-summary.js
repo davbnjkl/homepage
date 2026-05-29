@@ -123,11 +123,13 @@ function summaryCardText(card, mode = "value") {
     return `${card.name} ${fishCardValue(card)}`;
 }
 
-function checkpointSummaryTemplate(totalValue, target, passed) {
+function checkpointSummaryTemplate(totalValue, target, passed, coinSettlement = null) {
     const bestValueCard = bestPondCard();
     const bestStarCard = highestStarPondCard();
     const bestContributionCard = mostContributingPondCard();
     const gap = totalValue - target;
+    const coinsBeforeCheckpoint = coinSettlement?.before ?? state.coins;
+    const retainedCoins = coinSettlement?.retained ?? state.coins;
 
     return `
         <div class="checkpoint-summary ${passed ? "is-pass" : "is-fail"}">
@@ -142,7 +144,8 @@ function checkpointSummaryTemplate(totalValue, target, passed) {
             <div><span>合成</span><strong>${state.stats.combined}</strong></div>
             <div><span>卖鱼</span><strong>${state.stats.soldFish}</strong></div>
             <div><span>钓鱼</span><strong>${state.stats.baitUsed}</strong></div>
-            <div><span>金币</span><strong>${state.coins}G</strong></div>
+            <div><span>结算前金币</span><strong>${coinsBeforeCheckpoint}G</strong></div>
+            <div><span>保留金币</span><strong>${retainedCoins}G</strong></div>
             <div><span>最高价值鱼</span><strong>${summaryCardText(bestValueCard)}</strong></div>
             <div><span>最高星鱼</span><strong>${summaryCardText(bestStarCard, "star")}</strong></div>
             <div><span>最有贡献鱼</span><strong>${summaryCardText(bestContributionCard, "contribution")}</strong></div>
@@ -162,8 +165,51 @@ function fishingCost() {
     return Math.max(0, Math.floor(cost));
 }
 
+function baseDailyCoinCap() {
+    const modifiedCap = EFFECTS.modifyNumberWithCards(
+        effectSources(),
+        "modifyBaseDailyCoinCap",
+        MAX_BASE_DAILY_COINS,
+        effectContext({ baseCap: MAX_BASE_DAILY_COINS })
+    );
+
+    return Math.max(0, Math.floor(modifiedCap));
+}
+
 function baseDailyCoinsForDay(day = state.day) {
-    return BASE_DAILY_COINS + Math.floor(Math.max(0, day - 1) / 3);
+    return Math.min(baseDailyCoinCap(), BASE_DAILY_COINS + Math.floor(Math.max(0, day - 1) / 3));
+}
+
+function checkpointCoinRetention(totalValue, target, passed) {
+    const coinsBeforeCheckpoint = Math.max(0, Math.floor(state.coins || 0));
+    const modifiedRetention = EFFECTS.modifyNumberWithCards(
+        effectSources(),
+        "modifyCheckpointCoinRetention",
+        0,
+        effectContext({
+            coinsBeforeCheckpoint,
+            totalValue,
+            target,
+            passed,
+            checkpointDay: state.day
+        })
+    );
+
+    return Math.max(0, Math.min(coinsBeforeCheckpoint, Math.floor(modifiedRetention)));
+}
+
+function settleCheckpointCoins(totalValue, target, passed) {
+    const before = Math.max(0, Math.floor(state.coins || 0));
+    const retained = checkpointCoinRetention(totalValue, target, passed);
+
+    state.coins = retained;
+
+    if (before !== retained) {
+        pulseCoinChange();
+        addLog(`三日结算：金币从 ${before}G 清算为 ${retained}G。`);
+    }
+
+    return { before, retained };
 }
 
 function gainBaseDailyCoins() {

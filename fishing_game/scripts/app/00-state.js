@@ -67,7 +67,8 @@ const STORAGE = {
 };
 
 const INITIAL_COINS = 2;
-const BASE_DAILY_COINS = 4;
+const BASE_DAILY_COINS = 3;
+const MAX_BASE_DAILY_COINS = 8;
 const BASE_FISHING_COST = 3;
 const DEFAULT_CHARGE_WINDOW = {
     perfectStartMs: 900,

@@ -41,6 +41,41 @@ addCoreUpgradeCostByStar: {
             }
         },
 
+addBaseDailyCoinCap: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+addBaseDailyCoinCapByStar: {
+            modifyNumber(effect, card, value) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                return value + utils.starValue(effect, "amounts", card, effect.amount || 0);
+            }
+        },
+
+addCheckpointCoinRetention: {
+            modifyNumber(effect, card, value) {
+                return value + effect.amount;
+            }
+        },
+
+addCheckpointCoinRetentionByStar: {
+            modifyNumber(effect, card, value) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                return value + utils.starValue(effect, "amounts", card, effect.amount || 0);
+            }
+        },
+
+retainCheckpointCoinPercent: {
+            modifyNumber(effect, card, value, context) {
+                const coinsBeforeCheckpoint = Math.max(0, Math.floor(context.coinsBeforeCheckpoint || 0));
+                const percent = Math.max(0, effect.percent || 0);
+
+                return value + Math.floor(coinsBeforeCheckpoint * percent);
+            }
+        },
+
 multiplyFishingCost: {
             modifyNumber(effect, card, value) {
                 return value * effect.multiplier;

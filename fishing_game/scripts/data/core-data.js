@@ -3,8 +3,8 @@ window.FISHING_GAME_DATA = {
         standard: {
             id: "standard",
             name: "标准模式",
-            checkpointTargets: [12, 30, 55, 90, 135],
-            checkpointTargetStep: 60
+            checkpointTargets: [16, 42, 82, 140, 220, 320],
+            checkpointTargetStep: 120
         }
     },
     eventSystem: {
@@ -15,11 +15,13 @@ window.FISHING_GAME_DATA = {
             onCatchChoice: "生成鱼获选择时",
             onCheckpoint: "三日结算时",
             modifyBaitPool: "事件调整稀有度池",
-        modifyCatchPickCount: "事件调整鱼获选择数量",
-        modifySellValue: "事件调整卖鱼价格",
-        modifyCardValue: "事件调整鱼卡价值",
-        modifyCoreUpgradeCost: "事件调整饵料升级费用",
-        modifyFishingChargeWindow: "事件调整钓鱼蓄力窗口"
+            modifyBaseDailyCoinCap: "事件调整每日基础金币上限",
+            modifyCheckpointCoinRetention: "事件调整三日结算金币保留",
+            modifyCatchPickCount: "事件调整鱼获选择数量",
+            modifySellValue: "事件调整卖鱼价格",
+            modifyCardValue: "事件调整鱼卡价值",
+            modifyCoreUpgradeCost: "事件调整饵料升级费用",
+            modifyFishingChargeWindow: "事件调整钓鱼蓄力窗口"
         },
         events: []
     },
@@ -225,11 +227,13 @@ window.FISHING_GAME_DATA = {
         modifySellValue: "计算售价时",
         modifyCardValue: "计算鱼卡价值时",
         modifyDailyValueGain: "计算每日价值成长时",
+        modifyBaseDailyCoinCap: "计算每日基础金币上限时",
         modifyBaitPool: "计算饵料掉落池时",
         modifyFishingChargeWindow: "计算钓鱼蓄力窗口时",
         modifyCatchPickCount: "计算鱼获可选数量时",
         modifyFishingCost: "计算钓鱼花费时",
         modifyCoreUpgradeCost: "计算饵料升级费用时",
+        modifyCheckpointCoinRetention: "计算三日结算金币保留时",
         modifyMoveReward: "计算移动收益时",
         modifyCardSlotSize: "计算鱼卡占格时",
         modifyPondCapacity: "计算水族馆容量时"
@@ -278,6 +282,26 @@ window.FISHING_GAME_DATA = {
         addCoreUpgradeCostByStar: {
             label: "按星级调整饵料升级费用",
             fields: ["amounts"]
+        },
+        addBaseDailyCoinCap: {
+            label: "调整每日基础金币上限",
+            fields: ["amount"]
+        },
+        addBaseDailyCoinCapByStar: {
+            label: "按星级调整每日基础金币上限",
+            fields: ["amounts"]
+        },
+        addCheckpointCoinRetention: {
+            label: "调整三日结算金币保留",
+            fields: ["amount"]
+        },
+        addCheckpointCoinRetentionByStar: {
+            label: "按星级调整三日结算金币保留",
+            fields: ["amounts"]
+        },
+        retainCheckpointCoinPercent: {
+            label: "按比例保留三日结算金币",
+            fields: ["percent"]
         },
         multiplyFishingCost: {
             label: "倍率调整钓鱼花费",

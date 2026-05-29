@@ -102,6 +102,7 @@ function openCheckpointDecision() {
     const target = checkpointTargetForDay(state.day);
     const passed = totalValue >= target;
     runEventSystemHook("onCheckpoint", { totalValue, target, passed });
+    const coinSettlement = settleCheckpointCoins(totalValue, target, passed);
     state.decisionLocked = true;
     state.lastCheckpointDay = state.day;
     elements.decisionModal.hidden = false;
@@ -109,7 +110,7 @@ function openCheckpointDecision() {
     elements.decisionCopy.textContent = passed
         ? `第 ${state.day} 天结束，水族馆总价值 ${totalValue}/${target}，可以继续航行。`
         : `第 ${state.day} 天结束，水族馆总价值 ${totalValue}/${target}，未达到标准，本轮结束。`;
-    elements.decisionPreview.innerHTML = checkpointSummaryTemplate(totalValue, target, passed);
+    elements.decisionPreview.innerHTML = checkpointSummaryTemplate(totalValue, target, passed, coinSettlement);
     elements.decisionOptions.innerHTML = "";
 
     const primaryButton = document.createElement("button");
