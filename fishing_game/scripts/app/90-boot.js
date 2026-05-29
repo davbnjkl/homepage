@@ -83,6 +83,8 @@ function setLoadingText(text) {
     }
 }
 
+let initialLoadingActive = true;
+
 function waitForWindowLoad() {
     if (document.readyState === "complete") {
         return Promise.resolve();
@@ -117,7 +119,7 @@ function assetUrlsForLoading() {
         }
     });
 
-    DATA.fishPool.slice(0, 12).forEach((fish) => {
+    DATA.fishPool.forEach((fish) => {
         if (fish.art) {
             urls.add(fish.art);
         }
@@ -126,13 +128,93 @@ function assetUrlsForLoading() {
     return [...urls];
 }
 
-function preloadImage(url) {
+async function preloadImage(url) {
+    if (!url || preloadedImageCache.has(url)) {
+        return preloadedImageCache.get(url) || null;
+    }
+
     return new Promise((resolve) => {
         const image = new Image();
-        image.onload = resolve;
-        image.onerror = resolve;
+        image.decoding = "async";
+        image.loading = "eager";
+        image.onload = async () => {
+            try {
+                if (image.decode) {
+                    await image.decode();
+                }
+            } catch (error) {
+                // onload already confirmed the resource is usable; decode can reject on some browsers.
+            }
+            preloadedImageCache.set(url, image);
+            resolve(image);
+        };
+        image.onerror = () => {
+            preloadedImageCache.set(url, null);
+            resolve(null);
+        };
         image.src = url;
     });
+}
+
+async function preloadImagesInBatches(urls, batchSize = 6) {
+    const uniqueUrls = [...new Set(urls.filter(Boolean))];
+
+    for (let index = 0; index < uniqueUrls.length; index += batchSize) {
+        const batch = uniqueUrls.slice(index, index + batchSize);
+        setLoadingText(`正在解码图片 ${Math.min(index + batch.length, uniqueUrls.length)}/${uniqueUrls.length}...`);
+        await Promise.all(batch.map(preloadImage));
+    }
+}
+
+function warmupFishSamples() {
+    const samples = [];
+    const byRarity = new Map();
+    const byArt = new Map();
+
+    DATA.fishPool.forEach((fish) => {
+        if (fish.rarity && !byRarity.has(fish.rarity)) {
+            byRarity.set(fish.rarity, fish);
+        }
+        if (fish.art && !byArt.has(fish.art)) {
+            byArt.set(fish.art, fish);
+        }
+    });
+
+    [...byRarity.values(), ...byArt.values()].forEach((fish) => {
+        if (!samples.some((sample) => sample.id === fish.id)) {
+            samples.push(fish);
+        }
+    });
+
+    return samples.slice(0, 18).map((fish, index) => ({
+        ...fish,
+        tags: Array.isArray(fish.tags) ? [...fish.tags] : [],
+        effects: Array.isArray(fish.effects) ? fish.effects.map((effect) => ({ ...effect })) : [],
+        uid: `warmup-${fish.id}-${index}`,
+        star: index % 6 === 0 ? 3 : index % 3 === 0 ? 2 : 1,
+        value: fish.baseValue || 1
+    }));
+}
+
+async function warmUpCardRendering() {
+    if (!elements.renderWarmup || !initialLoadingActive) {
+        return;
+    }
+
+    setLoadingText("正在预热鱼卡...");
+    const samples = warmupFishSamples();
+    const normalCards = samples.map((fish) => cardTemplate(fish, "", false, { hideAction: true })).join("");
+    const expandedCards = samples.slice(0, 3).map((fish) => cardTemplate(fish, "", true, { hideAction: true })).join("");
+
+    elements.renderWarmup.innerHTML = `
+        <div class="warmup-grid">${normalCards}</div>
+        <div class="warmup-detail decision-card">${expandedCards}</div>
+    `;
+
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+    elements.renderWarmup.getBoundingClientRect();
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+    elements.renderWarmup.innerHTML = "";
 }
 
 async function waitForInitialAssets() {
@@ -140,8 +222,8 @@ async function waitForInitialAssets() {
     await waitForWindowLoad();
     setLoadingText("正在整理鱼卡...");
     await waitForFonts();
-    setLoadingText("正在放入鱼鱼...");
-    await Promise.all(assetUrlsForLoading().map(preloadImage));
+    await preloadImagesInBatches(assetUrlsForLoading());
+    await warmUpCardRendering();
 }
 
 async function hideLoadingWhenReady() {
@@ -153,6 +235,10 @@ async function hideLoadingWhenReady() {
         maxWait
     ]);
 
+    initialLoadingActive = false;
+    if (elements.renderWarmup) {
+        elements.renderWarmup.innerHTML = "";
+    }
     setLoadingText("准备完成");
     elements.loadingScreen?.classList.add("is-hidden");
     window.setTimeout(() => {

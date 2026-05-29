@@ -37,6 +37,7 @@ const elements = {
     lastCatch: document.getElementById("lastCatch"),
     loadingScreen: document.getElementById("loadingScreen"),
     loadingText: document.getElementById("loadingText"),
+    renderWarmup: document.getElementById("renderWarmup"),
     logList: document.getElementById("logList"),
     pixelScene: document.getElementById("pixelScene"),
     pondGrid: document.getElementById("pondGrid"),
@@ -130,6 +131,7 @@ function createInitialState(modeId = "standard", gameStarted = false, characterI
 
 const valueAnimationTimers = new Map();
 const valueAnimationIntervals = new Map();
+const preloadedImageCache = new Map();
 let dayTransitionTimer = null;
 
 const state = createInitialState("standard", false);

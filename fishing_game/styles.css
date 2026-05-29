@@ -242,6 +242,30 @@ button {
     text-shadow: 0 2px 0 #000;
 }
 
+.render-warmup {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 720px;
+    height: 720px;
+    overflow: hidden;
+    opacity: 0.001;
+    pointer-events: none;
+    contain: strict;
+}
+
+.warmup-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 104px);
+    grid-auto-rows: 142px;
+    gap: 8px;
+}
+
+.warmup-detail {
+    width: 300px;
+    margin-top: 12px;
+}
+
 /* Main menu */
 .main-menu {
     position: fixed;
@@ -511,8 +535,7 @@ body.has-selected-catch .catch-action-row {
         130px 240px,
         170px 280px,
         auto;
-    animation: backgroundBubbles 9s linear infinite;
-    will-change: background-position;
+    animation: backgroundBubbles 14s steps(28, end) infinite;
 }
 
 .pixel-scene::after {
@@ -652,12 +675,9 @@ body.has-selected-catch .catch-action-row {
     animation: bobberHit 360ms steps(3, end) 2;
 }
 
-.pixel-scene.is-casting {
-    animation: sceneCastPulse 360ms steps(4, end) both;
-}
-
+.pixel-scene.is-casting,
 .pixel-scene.is-catching {
-    animation: sceneCatchPulse 520ms steps(5, end) both;
+    animation: none;
 }
 
 .dock,
@@ -979,8 +999,7 @@ body.has-selected-catch .catch-action-row {
         auto,
         auto,
         auto;
-    animation: tankBubbles 5.8s linear infinite;
-    will-change: background-position;
+    animation: tankBubbles 8s steps(20, end) infinite;
 }
 
 .slot-locked-shell,
@@ -1298,7 +1317,6 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 }
 
 #fishButton.is-charging {
-    filter: brightness(1.18);
     box-shadow:
         inset 0 0 0 2px rgba(255, 238, 172, 0.2),
         inset 0 -6px 0 rgba(0, 0, 0, 0.22),
@@ -1361,6 +1379,8 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         0 5px 0 rgba(0, 0, 0, 0.62),
         0 0 16px color-mix(in srgb, var(--rarity-color, #8fb1c9) 18%, transparent);
     transform-origin: center center;
+    backface-visibility: hidden;
+    contain: paint;
     transition: filter 120ms ease-out, transform 120ms ease-out;
 }
 
@@ -1505,7 +1525,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 
 .fish-value.is-value-spinning .fish-value-number {
     animation: valueSlotSpin var(--value-spin-duration, 360ms) steps(9, end) both;
-    will-change: transform, filter;
+    will-change: transform;
 }
 
 .fish-value.is-value-spinning::after {
@@ -1623,7 +1643,6 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     background:
         radial-gradient(circle at 50% 25%, rgba(111, 231, 255, 0.12), transparent 28%),
         rgba(2, 4, 10, 0.76);
-    backdrop-filter: blur(2px);
     animation: modalBackdropIn 140ms ease-out both;
 }
 
@@ -1642,6 +1661,7 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
         0 18px 44px rgba(0, 0, 0, 0.64),
         inset 0 0 0 2px rgba(255, 255, 255, 0.04),
         inset 0 0 26px rgba(111, 231, 255, 0.08);
+    backface-visibility: hidden;
     animation: modalCardIn 180ms cubic-bezier(0.2, 1.18, 0.34, 1) both;
 }
 
@@ -1682,6 +1702,8 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     color: inherit;
     cursor: pointer;
     transform-origin: center 58%;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
     animation: catchCardFlip 260ms cubic-bezier(0.2, 1.18, 0.34, 1) both;
     animation-delay: calc(var(--choice-index, 0) * 48ms);
 }
@@ -2060,28 +2082,29 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0% {
         opacity: 0;
         transform: translateY(12px) rotateX(64deg) scale(0.92);
-        filter: brightness(0.78);
     }
     58% {
         opacity: 1;
         transform: translateY(-2px) rotateX(-8deg) scale(1.02);
-        filter: brightness(1.18);
     }
     100% {
         opacity: 1;
         transform: translateY(0) rotateX(0deg) scale(1);
-        filter: brightness(1);
     }
 }
 
 @keyframes catchCardPicked {
     0% {
         transform: translateY(0) scale(1);
-        filter: brightness(1);
     }
     100% {
         transform: translateY(-8px) scale(1.05);
-        filter: brightness(1.35) drop-shadow(0 0 12px rgba(255, 216, 90, 0.4));
+        box-shadow:
+            inset 0 0 0 2px rgba(1, 5, 12, 0.78),
+            inset 0 0 0 4px rgba(255, 255, 255, 0.05),
+            inset 0 -12px 0 rgba(0, 0, 0, 0.14),
+            0 5px 0 rgba(0, 0, 0, 0.62),
+            0 0 18px rgba(255, 216, 90, 0.42);
     }
 }
 
@@ -2089,7 +2112,6 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0% {
         opacity: 0;
         transform: translateY(-12px) scale(0.82) rotate(-2deg);
-        filter: brightness(1.45);
     }
     45% {
         opacity: 1;
@@ -2101,7 +2123,6 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
-        filter: brightness(1);
     }
 }
 
@@ -2109,27 +2130,23 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0% {
         opacity: 1;
         transform: translateY(0) rotate(0deg) scale(1);
-        filter: brightness(1);
     }
     35% {
         opacity: 1;
         transform: translateY(-6px) rotate(-2deg) scale(1.04);
-        filter: brightness(1.32);
     }
     to {
         opacity: 0;
         transform: translateY(16px) rotate(5deg) scale(0.76);
-        filter: brightness(0.72);
     }
 }
 
 @keyframes slotWaterConfirm {
     0%,
     100% {
-        filter: brightness(1);
+        opacity: 1;
     }
     42% {
-        filter: brightness(1.34) saturate(1.12);
         box-shadow:
             inset 0 0 0 2px rgba(3, 8, 18, 0.76),
             inset 0 0 0 4px rgba(111, 255, 191, 0.18),
@@ -2167,24 +2184,21 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 @keyframes placeTargetGlow {
     0%,
     100% {
-        filter: brightness(1);
+        opacity: 1;
     }
     50% {
-        filter: brightness(1.16);
+        opacity: 0.92;
     }
 }
 
 @keyframes pondMoveFlash {
     0% {
-        filter: brightness(1.65) drop-shadow(0 0 0 rgba(111, 231, 255, 0));
         transform: translateY(-5px) scale(0.98);
     }
     60% {
-        filter: brightness(1.28) drop-shadow(0 0 10px rgba(111, 231, 255, 0.48));
         transform: translateY(1px) scale(1.03);
     }
     100% {
-        filter: brightness(1);
         transform: translateY(0) scale(1);
     }
 }
@@ -2192,15 +2206,12 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 @keyframes effectTriggerFlash {
     0%,
     100% {
-        filter: brightness(1);
         transform: scale(1);
     }
     35% {
-        filter: brightness(1.65) saturate(1.25);
         transform: scale(1.025);
     }
     70% {
-        filter: brightness(1.25);
         transform: scale(1.01);
     }
 }
@@ -2244,11 +2255,9 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0%,
     100% {
         transform: translateY(0) scale(1);
-        filter: brightness(1);
     }
     45% {
         transform: translateY(-2px) scale(1.04);
-        filter: brightness(1.34);
     }
 }
 
@@ -2256,11 +2265,9 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0%,
     100% {
         transform: translateY(0) scale(1);
-        filter: brightness(1);
     }
     45% {
         transform: translateY(-2px) scale(1.06);
-        filter: brightness(1.4);
     }
 }
 
@@ -2268,11 +2275,9 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0%,
     100% {
         transform: translateY(0);
-        filter: brightness(1);
     }
     45% {
         transform: translateY(-4px);
-        filter: brightness(1.32);
     }
 }
 
@@ -2289,12 +2294,10 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0% {
         opacity: 0;
         transform: translateY(10px) scale(0.96);
-        filter: brightness(0.86);
     }
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
-        filter: brightness(1);
     }
 }
 
@@ -2315,38 +2318,35 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     0% {
         opacity: 0;
         transform: translateY(16px) scale(0.9);
-        filter: brightness(0.8);
     }
     26%,
     68% {
         opacity: 1;
         transform: translateY(0) scale(1);
-        filter: brightness(1.18);
     }
     100% {
         opacity: 0;
         transform: translateY(-12px) scale(1.04);
-        filter: brightness(1);
     }
 }
 
 @keyframes sceneCastPulse {
     0%,
     100% {
-        filter: brightness(1);
+        opacity: 1;
     }
     50% {
-        filter: brightness(1.12);
+        opacity: 0.98;
     }
 }
 
 @keyframes sceneCatchPulse {
     0%,
     100% {
-        filter: brightness(1);
+        opacity: 1;
     }
     40% {
-        filter: brightness(1.22) saturate(1.18);
+        opacity: 0.98;
     }
 }
 
@@ -2372,11 +2372,9 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 @keyframes combinePulse {
     0%,
     100% {
-        filter: brightness(1);
         transform: scale(1);
     }
     50% {
-        filter: brightness(1.7);
         transform: scale(1.06);
     }
 }
@@ -2384,23 +2382,18 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 @keyframes valueSlotSpin {
     0% {
         transform: rotateX(0deg) scale(1);
-        filter: blur(0);
     }
     22% {
         transform: rotateX(180deg) scale(1.08);
-        filter: blur(1px);
     }
     48% {
         transform: rotateX(360deg) scale(1.08);
-        filter: blur(1px);
     }
     72% {
         transform: rotateX(540deg) scale(1.04);
-        filter: blur(0.5px);
     }
     100% {
         transform: rotateX(720deg) scale(1);
-        filter: blur(0);
     }
 }
 

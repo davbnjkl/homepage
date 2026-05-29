@@ -208,32 +208,20 @@ function catchFishWithCharge(charge = chargeResult(0)) {
     state.selectedCatchUid = null;
     state.decisionLocked = true;
     elements.lastCatch.textContent = "等待放入";
-    elements.pixelScene.classList.add("is-casting");
-    setStatus("抛竿中");
+    elements.pixelScene.classList.remove("is-casting");
+    elements.pixelScene.classList.add("is-catching");
+    setStatus("鱼获上钩");
     addLog(`支付 ${fishCost}G 使用${bait.name}钓鱼，钓上 3 条鱼，可选择 ${state.catchPickLimit} 条放入水族馆。`);
     if (charge.isPerfect) {
         addLog(`蓄力命中最佳区间，本次高品质鱼权重小幅提高。`);
     }
 
     render();
+    openCatchChoiceDecision();
 
     window.setTimeout(() => {
-        if (state.catchChoices.length === 0 || state.selectedCatchUid) {
-            elements.pixelScene.classList.remove("is-casting");
-            state.decisionLocked = false;
-            render();
-            return;
-        }
-
-        elements.pixelScene.classList.remove("is-casting");
-        elements.pixelScene.classList.add("is-catching");
-        setStatus("鱼获上钩");
-        openCatchChoiceDecision();
-
-        window.setTimeout(() => {
-            elements.pixelScene.classList.remove("is-catching");
-        }, 520);
-    }, 360);
+        elements.pixelScene.classList.remove("is-catching");
+    }, 420);
 }
 
 function handleFishButtonClick() {
