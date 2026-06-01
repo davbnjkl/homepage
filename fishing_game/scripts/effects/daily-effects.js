@@ -203,7 +203,7 @@ shiftAllImageSwapperDaily: {
                 }
 
                 const diff = Math.abs(context.fishCardValue(highest) - context.fishCardValue(lowest));
-                const cap = utils.star(card) >= 2 ? 15 : 10;
+                const cap = utils.star(card) >= 2 ? 12 : 8;
                 const amount = Math.min(cap, Math.floor(diff / 2));
 
                 if (!context.swapPondCards(highest, lowest, { sourceCard: card, reason: effect.id })) {
@@ -318,21 +318,24 @@ shiftReturnMothershipDaily: {
                     }
                 });
 
-                const amount = utils.star(card) >= 2 ? 7 : 5;
+                const amount = utils.starValue(effect, "amounts", card, 4);
                 const cells = pathCards.map((fish) => context.pondCellIndex(fish));
                 const includesCenter = cells.includes(4);
                 const cornerCount = cells.filter((cell) => [0, 2, 6, 8].includes(cell)).length;
-                const repeat = utils.star(card) >= 3 && includesCenter && cornerCount >= 2 ? 2 : 1;
                 let changed = 0;
 
-                for (let index = 0; index < repeat; index += 1) {
+                pathCards.forEach((target) => {
+                    changed += utils.addValue(context, target, amount, card);
+                });
+
+                if (utils.star(card) >= 3 && includesCenter && cornerCount >= 2) {
                     pathCards.forEach((target) => {
-                        changed += utils.addValue(context, target, amount, card);
+                        changed += utils.addValue(context, target, effect.star3PathBonus || 3, card);
                     });
                 }
 
                 if (utils.star(card) >= 3) {
-                    changed += utils.addValue(context, card, 9, card);
+                    changed += utils.addValue(context, card, effect.star3SelfBonus || 6, card);
                 }
 
                 if (changed > 0) {
@@ -422,8 +425,8 @@ schoolHeraldDaily: {
                 const utils = window.FISHING_CARD_EFFECTS.utils;
                 const cards = utils.schoolCards(context, effect.archetype);
                 const count = cards.length;
-                const bucket = utils.star(card) >= 2 ? 2 : 3;
-                const repeat = Math.floor(count / bucket) * (utils.star(card) >= 3 && count >= 7 ? 2 : 1);
+                const bucket = utils.star(card) >= 2 ? 4 : 5;
+                const repeat = Math.floor(count / bucket) + (utils.star(card) >= 3 && count >= 7 ? 1 : 0);
                 let changed = 0;
 
                 cards.forEach((target) => {
@@ -444,7 +447,7 @@ schoolTideKingDaily: {
                 let gain = cards.length;
 
                 if (full) {
-                    gain += utils.star(card) >= 2 ? 8 : 5;
+                    gain += utils.star(card) >= 2 ? 6 : 5;
                 }
 
                 utils.addValue(context, card, gain, card);
@@ -452,7 +455,7 @@ schoolTideKingDaily: {
                 if (full && utils.star(card) >= 3) {
                     cards
                         .filter((target) => target.uid !== card.uid)
-                        .forEach((target) => utils.addValue(context, target, 2, card));
+                        .forEach((target) => utils.addValue(context, target, 1, card));
                 }
 
                 if (gain > 0) {
@@ -472,8 +475,8 @@ schoolGoldenResonanceDaily: {
                     return;
                 }
 
-                const ratio = utils.star(card) >= 3 ? 0.3 : 0.2;
-                const cap = utils.star(card) >= 2 ? 8 : 5;
+                const ratio = utils.star(card) >= 3 ? 0.25 : 0.2;
+                const cap = utils.star(card) >= 2 ? 6 : 4;
                 const total = Math.floor(context.fishCardValue(top) * ratio);
                 const each = Math.min(cap, Math.floor(total / targets.length));
                 let changed = 0;
@@ -483,7 +486,7 @@ schoolGoldenResonanceDaily: {
                 });
 
                 if (utils.star(card) >= 3) {
-                    changed += utils.addValue(context, card, 3, card);
+                    changed += utils.addValue(context, card, 2, card);
                 }
 
                 if (changed > 0) {
@@ -502,10 +505,10 @@ schoolNineTideAncestorDaily: {
                     return;
                 }
 
-                let amount = utils.star(card) >= 2 ? 4 : 3;
+                let amount = utils.star(card) >= 2 ? 3 : 2;
 
                 if (count >= 9 || context.isPondFull()) {
-                    amount += utils.star(card) >= 2 ? 8 : 6;
+                    amount += utils.star(card) >= 2 ? 4 : 3;
                 }
 
                 let changed = 0;
@@ -530,6 +533,270 @@ schoolNineTideAncestorDailyGain: {
                 const count = context.countPondCardsByArchetype(effect.archetype);
 
                 return count >= 9 || context.isPondFull() ? value + 1 : value;
+            }
+        },
+
+falconLowDarterDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const catches = context.state.previousDailyCatchCount || 0;
+
+                if (catches > 0) {
+                    let gain = utils.starValue(effect, "successAmounts", card, 2);
+                    if (utils.star(card) >= 3 && catches >= (effect.extraCatchThreshold || 2)) {
+                        gain += effect.extraAmount || 0;
+                    }
+                    if (utils.addValue(context, card, gain, card)) {
+                        context.addLog(`${card.name} 低空追击，价值 +${gain}。`);
+                    }
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "failAmounts", card, 1);
+                const changed = utils.removeValue(context, card, loss, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 昨日无猎，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconShortBeakDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (!card.falconShortBeakRiskDay || card.falconShortBeakRiskDay >= context.state.day) {
+                    return;
+                }
+
+                if (context.adjacentPondCards(card).length > 0) {
+                    delete card.falconShortBeakRiskDay;
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "lossAmounts", card, 2);
+                const changed = utils.removeValue(context, card, loss, card);
+                delete card.falconShortBeakRiskDay;
+                if (changed > 0) {
+                    context.addLog(`${card.name} 孤身失衡，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconSplitShadowDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const adjacent = context.adjacentPondCards(card);
+                const target = adjacent.sort((left, right) => (right.valueGainedToday || 0) - (left.valueGainedToday || 0))[0];
+
+                if (!target) {
+                    const changed = utils.removeValue(context, card, 2, card);
+                    if (changed > 0) {
+                        context.addLog(`${card.name} 裂影无处依附，价值 -${changed}。`);
+                    }
+                    return;
+                }
+
+                let gain = 0;
+                if (utils.star(card) <= 1) {
+                    gain = Math.floor((target.valueGainedToday || 0) / 2);
+                } else {
+                    gain = Math.min(target.valueGainedToday || 0, utils.starValue(effect, "caps", card, 4));
+                }
+
+                if (utils.addValue(context, card, gain, card)) {
+                    context.addLog(`${card.name} 复制裂影成长，价值 +${gain}。`);
+                }
+
+                if (utils.star(card) >= 3 && utils.isFalconCard(target, effect.archetype)) {
+                    utils.addValue(context, target, effect.star3TargetBonus || 1, card);
+                }
+            }
+        },
+
+falconGoldPeckerDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if ((context.state.previousDailySoldFishCount || 0) > 0) {
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "lossAmounts", card, 2);
+                const changed = utils.removeValue(context, card, loss, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 昨日无售，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconLockEyeDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (card.falconMarkUid && card.falconMarkDay < context.state.day && !card.falconMarkTriggered) {
+                    const loss = utils.starValue(effect, "lossAmounts", card, 3);
+                    const changed = utils.removeValue(context, card, loss, card);
+                    if (changed > 0) {
+                        context.addLog(`${card.name} 猎标未动，价值 -${changed}。`);
+                    }
+                }
+
+                const target = utils.highestByValue(context.ownedCards().filter((fish) => fish.uid !== card.uid), context);
+                card.falconMarkUid = target?.uid || null;
+                card.falconMarkDay = context.state.day;
+                card.falconMarkTriggered = false;
+
+                if (target) {
+                    context.addLog(`${card.name} 锁定「${target.name}」为猎标。`);
+                }
+            }
+        },
+
+falconTideSpikeDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const adjacent = context.adjacentPondCards(card);
+                const amount = utils.starValue(effect, "amounts", card, 1);
+                const gain = adjacent.length * amount;
+
+                if (utils.addValue(context, card, gain, card)) {
+                    context.addLog(`${card.name} 借相邻鱼起势，价值 +${gain}。`);
+                }
+
+                if (adjacent.length <= (effect.crowdedThreshold || 2)) {
+                    return;
+                }
+
+                if (utils.star(card) >= 3) {
+                    adjacent.forEach((target) => utils.addValue(context, target, effect.star3AdjacentBonus || 1, card));
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "coinLossAmounts", card, 2);
+                context.state.coins = Math.max(0, context.state.coins - loss);
+                context.addLog(`${card.name} 猎潮过密，失去 ${loss}G。`);
+            }
+        },
+
+falconBlackPlunderDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const sold = context.state.previousDailySoldFishCount || 0;
+                const threshold = utils.starValue(effect, "thresholds", card, 3);
+
+                if (sold < threshold || utils.star(card) >= 3) {
+                    return;
+                }
+
+                const changed = utils.removeValue(context, card, effect.lossAmount || 5, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 掠夺过度，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconEmptyFallDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const cell = context.pondCellIndex(card);
+                const info = context.pondCellInfo(cell);
+                const cells = Array.from({ length: 9 }, (_, index) => context.pondCellInfo(index));
+                const unlocked = context.state.pondCells || [];
+                const occupied = new Set(context.ownedCards().map((fish) => context.pondCellIndex(fish)));
+                const rowHasEmpty = cells.some((item) => item.row === info.row && unlocked[item.cellIndex] && !occupied.has(item.cellIndex));
+                const columnHasEmpty = cells.some((item) => item.column === info.column && unlocked[item.cellIndex] && !occupied.has(item.cellIndex));
+
+                if (rowHasEmpty || columnHasEmpty) {
+                    let gain = utils.starValue(effect, "amounts", card, 6);
+                    if (utils.star(card) >= 3 && rowHasEmpty && columnHasEmpty) {
+                        gain += effect.star3BothBonus || 3;
+                    }
+                    utils.addValue(context, card, gain, card);
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "noEmptyLossAmounts", card, 4);
+                const changed = utils.removeValue(context, card, loss, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 无处空坠，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconSkyfallKingDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const falcons = utils.falconCards(context, effect.archetype);
+
+                if (falcons.length >= (effect.threshold || 3)) {
+                    const gain = utils.starValue(effect, "amounts", card, 10);
+                    utils.addValue(context, card, gain, card);
+
+                    if (utils.star(card) >= 3) {
+                        falcons
+                            .filter((target) => target.uid !== card.uid)
+                            .forEach((target) => utils.addValue(context, target, effect.star3OtherBonus || 2, card));
+                    }
+                    return;
+                }
+
+                if (utils.star(card) >= 3) {
+                    return;
+                }
+
+                const target = falcons[Math.floor(context.random() * Math.max(1, falcons.length))];
+                const changed = utils.removeValue(context, target, effect.failLossAmount || 3, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 天坠失势，「${target.name}」价值 -${changed}。`);
+                }
+            }
+        },
+
+falconFrostStarDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if ((context.state.previousDailyCombineCount || 0) > 0) {
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "lossAmounts", card, 4);
+                const changed = utils.removeValue(context, card, loss, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 昨日无合成，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconAllWingsDaily: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const falcons = utils.falconCards(context, effect.archetype);
+
+                if ((context.state.dayStartCoinsBeforeIncome || 0) <= 0 && utils.star(card) < 3) {
+                    const targets = utils.star(card) >= 2 ? [card] : falcons;
+                    const changed = targets.reduce((sum, target) => (
+                        sum + utils.removeValue(context, target, effect.zeroCoinLoss || 2, card)
+                    ), 0);
+                    if (changed > 0) {
+                        context.addLog(`${card.name} 零金币失衡，隼鱼合计价值 -${changed}。`);
+                    }
+                    return;
+                }
+
+                const amount = utils.starValue(effect, "amounts", card, 2);
+                let changed = 0;
+                falcons.forEach((target) => {
+                    changed += utils.addValue(context, target, amount, card);
+                });
+
+                if ((context.state.dayStartCoinsBeforeIncome || 0) <= 0 && utils.star(card) >= 3) {
+                    context.state.coins += 1;
+                }
+
+                if (changed > 0) {
+                    context.addLog(`${card.name} 万羽归猎，隼鱼合计价值 +${changed}。`);
+                }
             }
         }
 });

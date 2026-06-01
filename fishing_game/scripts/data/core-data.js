@@ -210,7 +210,8 @@ window.FISHING_GAME_DATA = {
     },
     archetypeLabels: {
         "school-growth": "共生鱼",
-        "position-shift": "迁游鱼"
+        "position-shift": "迁游鱼",
+        "falcon-risk": "隼鱼"
     },
     effectHooks: {
         onStoredAfterCatch: "捕获并放入水族馆后",
@@ -220,10 +221,12 @@ window.FISHING_GAME_DATA = {
         onDiscard: "鱼卡丢失时",
         onReplaceOut: "被替换移除时",
         onReplaceIn: "替换进入时",
+        onCatchChoice: "鱼获生成后",
         onDayStart: "新的一天开始时",
         onDayValueGain: "每日价值成长后",
         onCardMoved: "鱼卡移动或换位后",
         onFishSold: "鱼卡出售后",
+        onCheckpoint: "三日结算时",
         modifySellValue: "计算售价时",
         modifyCardValue: "计算鱼卡价值时",
         modifyDailyValueGain: "计算每日价值成长时",
@@ -469,7 +472,7 @@ window.FISHING_GAME_DATA = {
         },
         shiftNineGridDeityMoved: {
             label: "迁游鱼移动时群体成长",
-            fields: []
+            fields: ["amounts", "limits"]
         },
         shiftNineGridDeityDaily: {
             label: "每日推动最低价值迁游鱼",
@@ -477,7 +480,119 @@ window.FISHING_GAME_DATA = {
         },
         shiftReturnMothershipDaily: {
             label: "迁游路径群体成长",
-            fields: []
+            fields: ["amounts", "star3PathBonus", "star3SelfBonus"]
+        },
+        falconLowDarterDaily: {
+            label: "按昨日钓鱼次数成长或失衡",
+            fields: ["successAmounts", "failAmounts", "extraCatchThreshold", "extraAmount"]
+        },
+        falconShortBeakEnter: {
+            label: "入馆俯冲成长",
+            fields: ["amounts", "star3AdjacentFalconBonus"]
+        },
+        falconShortBeakDaily: {
+            label: "无相邻鱼失衡",
+            fields: ["lossAmounts"]
+        },
+        falconTurnFinEnter: {
+            label: "首次钓鱼选择隼鱼支援",
+            fields: ["amounts", "failLossAmounts", "star3MissCoin"]
+        },
+        falconSplitShadowDaily: {
+            label: "复制相邻自然成长",
+            fields: ["caps", "star3TargetBonus"]
+        },
+        falconGoldPeckerSold: {
+            label: "出售后自身成长",
+            fields: ["amounts", "star3FirstSaleCoin"]
+        },
+        falconGoldPeckerDaily: {
+            label: "未出售失衡",
+            fields: ["lossAmounts"]
+        },
+        falconLockEyeDaily: {
+            label: "猎标标记与未触发失衡",
+            fields: ["lossAmounts"]
+        },
+        falconLockEyeGain: {
+            label: "猎标获得价值时跟随成长",
+            fields: ["amounts", "star3TargetBonus"]
+        },
+        falconDiveSailfishStored: {
+            label: "鱼获放入后俯冲成长",
+            fields: ["amounts", "star3TargetBonus"]
+        },
+        falconDiveSailfishSold: {
+            label: "鱼获直接出售失衡",
+            fields: ["lossAmounts"]
+        },
+        falconCutlineEelCheckpoint: {
+            label: "结算金币风险",
+            fields: ["lossAmounts", "zeroCoinBonus"]
+        },
+        falconTideSpikeDaily: {
+            label: "相邻数量成长与金币风险",
+            fields: ["amounts", "coinLossAmounts", "crowdedThreshold", "star3AdjacentBonus"]
+        },
+        falconRedwingJudgeCheckpoint: {
+            label: "达标审判成长",
+            fields: ["passAmounts"]
+        },
+        falconRedwingJudgeRetention: {
+            label: "超额达标金币保留",
+            fields: ["threshold", "amount"]
+        },
+        falconBlackPlunderSellValue: {
+            label: "掠夺鱼售价加成",
+            fields: ["amounts"]
+        },
+        falconBlackPlunderSold: {
+            label: "出售吸收价值",
+            fields: ["percents"]
+        },
+        falconBlackPlunderDaily: {
+            label: "出售过多失衡",
+            fields: ["thresholds", "lossAmount"]
+        },
+        falconHeadwindRarity: {
+            label: "提高高品质权重",
+            fields: ["multipliers"]
+        },
+        falconHeadwindChoice: {
+            label: "无高品质鱼获失衡",
+            fields: ["lossAmounts", "star3Discount"]
+        },
+        falconEmptyFallDaily: {
+            label: "空格行列成长",
+            fields: ["amounts", "noEmptyLossAmounts", "star3BothBonus"]
+        },
+        falconSkyfallKingDaily: {
+            label: "隼鱼数量终结成长",
+            fields: ["amounts", "failLossAmount", "star3OtherBonus"]
+        },
+        falconCloudCutterCheckpoint: {
+            label: "达标保留与失败群体失衡",
+            fields: ["failLossAmounts", "star3OverTargetBonus", "star3OverTargetThreshold"]
+        },
+        falconCloudCutterRetention: {
+            label: "达标金币比例保留",
+            fields: ["percents"]
+        },
+        falconFrostStarCombine: {
+            label: "合成后自身成长",
+            fields: ["amounts", "star3AllBonus"]
+        },
+        falconFrostStarDaily: {
+            label: "未合成失衡",
+            fields: ["lossAmounts"]
+        },
+        falconAllWingsDaily: {
+            label: "全体隼鱼每日成长或失衡",
+            fields: ["amounts", "zeroCoinLoss"]
+        },
+        falconEclipseDeityCheckpoint: {
+            label: "结算超额奖励与金币上限风险",
+            fields: ["thresholds", "amounts", "failCapMod", "failDurations", "star3GreatThreshold", "star3CapBonus"]
         }
     },
     fishPool: []

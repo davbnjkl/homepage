@@ -314,6 +314,14 @@ function effectSources() {
     ];
 }
 
+function cardAndCharacterEffectSources() {
+    const character = activeCharacter();
+    return [
+        ...(character ? [character] : []),
+        ...ownedCards()
+    ];
+}
+
 function runEventSystemHook(hook, extra = {}) {
     if (!DATA.eventSystem?.enabled) {
         return;
@@ -362,6 +370,10 @@ function runCardHook(card, hook, extra = {}) {
 
 function runOwnedCardsHook(hook, extra = {}) {
     EFFECTS.runCardsHook(effectSources(), hook, effectContext(extra));
+}
+
+function runCardAndCharacterHook(hook, extra = {}) {
+    EFFECTS.runCardsHook(cardAndCharacterEffectSources(), hook, effectContext(extra));
 }
 
 function cardsForTargetModifiers(targetCard) {

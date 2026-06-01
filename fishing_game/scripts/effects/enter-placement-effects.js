@@ -168,5 +168,76 @@ schoolReturnSailfishEnter: {
 
                 context.addLog(`${card.name} 复制回游成长，价值 +${copied}。`);
             }
+        },
+
+falconShortBeakEnter: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (!utils.isEnteringSelf(card, context)) {
+                    return;
+                }
+
+                let gain = utils.starValue(effect, "amounts", card, 3);
+                const adjacent = context.adjacentPondCards(card);
+
+                if (utils.star(card) >= 3 && adjacent.some((target) => utils.isFalconCard(target, effect.archetype))) {
+                    gain += effect.star3AdjacentFalconBonus || 2;
+                }
+
+                utils.addValue(context, card, gain, card);
+
+                if (adjacent.length <= 0 && utils.star(card) < 3) {
+                    card.falconShortBeakRiskDay = context.state.day;
+                }
+            }
+        },
+
+falconTurnFinEnter: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const entering = context.enteringCard || context.caughtFish;
+
+                if (!entering || (context.state.dailyCatchCount || 0) !== 1) {
+                    return;
+                }
+
+                if (utils.isFalconCard(entering, effect.archetype)) {
+                    const amount = utils.starValue(effect, "amounts", card, 3);
+                    utils.addValue(context, entering, amount, card);
+                    context.addLog(`${card.name} 回旋助猎，「${entering.name}」价值 +${amount}。`);
+                    return;
+                }
+
+                if (utils.star(card) >= 3 && entering.catchBatchHasFalcon) {
+                    context.state.coins += effect.star3MissCoin || 1;
+                    context.addLog(`${card.name} 放过隼影，补回 ${effect.star3MissCoin || 1}G。`);
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "failLossAmounts", card, 2);
+                const changed = utils.removeValue(context, card, loss, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 回旋落空，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconDiveSailfishStored: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const entering = context.enteringCard || context.caughtFish;
+
+                if (!entering) {
+                    return;
+                }
+
+                const amount = utils.starValue(effect, "amounts", card, 4);
+                utils.addValue(context, card, amount, card);
+
+                if (utils.star(card) >= 3 && utils.isFalconCard(entering, effect.archetype)) {
+                    utils.addValue(context, entering, effect.star3TargetBonus || 2, card);
+                }
+            }
         }
 });

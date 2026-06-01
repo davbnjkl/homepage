@@ -215,7 +215,7 @@ shiftNineGridDeityMoved: {
                     return;
                 }
 
-                const limit = utils.star(card) >= 3 ? 12 : 9;
+                const limit = utils.starValue(effect, "limits", card, 6);
                 const key = `shift-deity-${card.uid}`;
 
                 if (context.dailyCounter(card, key) >= limit) {
@@ -223,7 +223,7 @@ shiftNineGridDeityMoved: {
                 }
 
                 context.incrementDailyCounter(card, key);
-                const amount = utils.star(card) >= 2 ? 2 : 1;
+                const amount = utils.starValue(effect, "amounts", card, 1);
                 utils.shiftCards(context, effect.archetype).forEach((target) => utils.addValue(context, target, amount, card));
             }
         },
@@ -254,6 +254,27 @@ schoolDenseGuardValueGain: {
 
                 if (utils.star(card) >= 3 && used === 0) {
                     utils.addValue(context, target, 1, card, false);
+                }
+            }
+        },
+
+falconLockEyeGain: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const target = context.gainedCard;
+
+                if (!target || target.uid !== card.falconMarkUid || context.sourceCard?.uid === card.uid) {
+                    return;
+                }
+
+                const amount = utils.starValue(effect, "amounts", card, 1);
+                utils.addValue(context, card, amount, card, false);
+                card.falconMarkTriggered = true;
+
+                const key = `falcon-lock-eye-target-bonus-${card.uid}`;
+                if (utils.star(card) >= 3 && utils.isFalconCard(target, effect.archetype) && context.dailyCounter(card, key) <= 0) {
+                    context.incrementDailyCounter(card, key);
+                    utils.addValue(context, target, effect.star3TargetBonus || 2, card);
                 }
             }
         }

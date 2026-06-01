@@ -61,6 +61,7 @@ function combinePondGroup(group) {
     state.pond.splice(Math.min(firstIndex, state.pond.length), 0, combined);
     runOwnedCardsHook("onCombineResult", { combinedCard: combined, materialCards: materialRefs.map((ref) => ref.card) });
     state.stats.combined += 1;
+    state.dailyCombineCount += 1;
     state.combineHighlightUid = combined.uid;
     setStatus(`${combined.name} 合成 ${combined.star}★`);
     addLog(`合成闪光：三张「${combined.name}」变为 ${combined.star}★，总价值 ${fishCardValue(combined)}，保留在第 ${firstIndex + 1} 位。`);
@@ -136,6 +137,7 @@ function sellFish(source, index) {
             pulseCoinChange();
             pulsePondValue();
             state.stats.soldFish += 1;
+            state.dailySoldFishCount += 1;
             runCardHook(fish, "onSell", { card: fish, sale, soldCellIndex });
             runOwnedCardsHook("onSell", { card: fish, sale, soldCellIndex });
             runOwnedCardsHook("onFishSold", { card: fish, soldCard: fish, sale, soldCellIndex });
@@ -188,6 +190,7 @@ function sellSelectedCatchFish() {
         state.coins += sale.value;
         pulseCoinChange();
         state.stats.soldFish += 1;
+        state.dailySoldFishCount += 1;
         runCardHook(fish, "onSell", { card: fish, sale, soldCellIndex: null, directFromCatch: true });
         runOwnedCardsHook("onSell", { card: fish, sale, soldCellIndex: null, directFromCatch: true });
         runOwnedCardsHook("onFishSold", { card: fish, soldCard: fish, sale, soldCellIndex: null, directFromCatch: true });

@@ -153,5 +153,72 @@ addValueToHighestPondByStar: {
                     context.addLog(`${card.name} 强化最高价值鱼，「${target.name}」价值 +${amount}。`);
                 }
             }
+        },
+
+falconGoldPeckerSold: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const sold = context.soldCard || context.card;
+
+                if (!sold || sold.uid === card.uid) {
+                    return;
+                }
+
+                const amount = utils.starValue(effect, "amounts", card, 2);
+                utils.addValue(context, card, amount, card);
+
+                const key = `falcon-gold-pecker-sale-${card.uid}`;
+                if (utils.star(card) >= 3 && context.dailyCounter(card, key) <= 0) {
+                    context.incrementDailyCounter(card, key);
+                    context.state.coins += effect.star3FirstSaleCoin || 1;
+                }
+            }
+        },
+
+falconDiveSailfishSold: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (!context.directFromCatch || utils.star(card) >= 2) {
+                    return;
+                }
+
+                const loss = utils.starValue(effect, "lossAmounts", card, 2);
+                const changed = utils.removeValue(context, card, loss, card);
+                if (changed > 0) {
+                    context.addLog(`${card.name} 俯冲落空，价值 -${changed}。`);
+                }
+            }
+        },
+
+falconBlackPlunderSellValue: {
+            modifyNumber(effect, card, value, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (!context.targetCard || context.targetCard.uid === card.uid) {
+                    return value;
+                }
+
+                return value + utils.starValue(effect, "amounts", card, 1);
+            }
+        },
+
+falconBlackPlunderSold: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const sold = context.soldCard || context.card;
+
+                if (!sold || sold.uid === card.uid) {
+                    return;
+                }
+
+                const percent = utils.starValue(effect, "percents", card, 0.2);
+                const absorbed = Math.floor((context.fishCardValue?.(sold) || sold.value || 0) * percent);
+
+                if (absorbed > 0) {
+                    utils.addValue(context, card, absorbed, card);
+                    context.addLog(`${card.name} 掠夺「${sold.name}」余势，价值 +${absorbed}。`);
+                }
+            }
         }
 });

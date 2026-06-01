@@ -28,6 +28,13 @@ addFishingCostByStar: {
             }
         },
 
+falconCutlineFishingCost: {
+            modifyNumber(effect, card, value) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                return value + utils.starValue(effect, "amounts", card, -1);
+            }
+        },
+
 addCoreUpgradeCost: {
             modifyNumber(effect, card, value) {
                 return value + effect.amount;
@@ -210,6 +217,21 @@ multiplyRarityWeights: {
             }
         },
 
+falconHeadwindRarity: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const multipliers = utils.starValue(effect, "multipliers", card, {});
+
+                Object.entries(multipliers || {}).forEach(([rarity, multiplier]) => {
+                    const target = context.rarityWeights.find((item) => item.rarity === rarity);
+
+                    if (target) {
+                        target.weight *= multiplier;
+                    }
+                });
+            }
+        },
+
 adjustFishingChargeWindow: {
             run(effect, card, context) {
                 if (!context.chargeWindow) {
@@ -233,6 +255,31 @@ addMoveReward: {
                 }
 
                 return value + (effect.amount || 0);
+            }
+        },
+
+falconRedwingJudgeRetention: {
+            modifyNumber(effect, card, value, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (utils.star(card) < 3 || !context.passed || (context.totalValue || 0) - (context.target || 0) < (effect.threshold || 20)) {
+                    return value;
+                }
+
+                return value + (effect.amount || 2);
+            }
+        },
+
+falconCloudCutterRetention: {
+            modifyNumber(effect, card, value, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+
+                if (!context.passed) {
+                    return value;
+                }
+
+                const percent = utils.starValue(effect, "percents", card, 0.15);
+                return value + Math.floor(Math.max(0, context.coinsBeforeCheckpoint || 0) * percent);
             }
         }
 });

@@ -38,6 +38,7 @@ function sellReplacedPondFish(removed, incomingCard, cellIndex) {
     pulseCoinChange();
     pulseShopPanel();
     state.stats.soldFish += 1;
+    state.dailySoldFishCount += 1;
     runCardHook(removed, "onSell", { card: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
     runOwnedCardsHook("onSell", { card: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
     runOwnedCardsHook("onFishSold", { card: removed, soldCard: removed, sale, soldCellIndex: cellIndex, replacedBy: incomingCard });
@@ -194,10 +195,18 @@ function catchFishWithCharge(charge = chargeResult(0)) {
     const baitId = baitIdForLevel(state.baitLevel);
     const bait = DATA.baitTypes[baitId] || DATA.baitTypes.basic;
     state.coins -= fishCost;
+    if (state.nextFishingCostDiscount > 0) {
+        state.nextFishingCostDiscount = 0;
+    }
     pulseCoinChange();
     runEventSystemHook("onCatchStart", { baitId, bait, day: state.day });
     state.currentCatchCharge = charge;
     const choices = drawCatchChoices(baitId);
+    const batchHasFalcon = choices.some((choice) => choice.archetype === "falcon-risk");
+    choices.forEach((choice) => {
+        choice.catchBatchHasFalcon = batchHasFalcon;
+    });
+    runCardAndCharacterHook("onCatchChoice", { baitId, bait, choices, day: state.day, charge });
     runEventSystemHook("onCatchChoice", { baitId, bait, choices, day: state.day, charge });
     state.currentCatchCharge = null;
     state.stats.baitUsed += 1;

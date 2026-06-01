@@ -78,6 +78,10 @@ window.FISHING_CARD_EFFECTS = {
             return card?.archetype === archetype;
         },
 
+        isFalconCard(card, archetype = "falcon-risk") {
+            return card?.archetype === archetype;
+        },
+
         schoolCards(context, archetype = "school-growth", options = {}) {
             if (context.pondCardsByArchetype) {
                 return context.pondCardsByArchetype(archetype, options);
@@ -93,6 +97,20 @@ window.FISHING_CARD_EFFECTS = {
         },
 
         shiftCards(context, archetype = "position-shift", options = {}) {
+            if (context.pondCardsByArchetype) {
+                return context.pondCardsByArchetype(archetype, options);
+            }
+
+            return context.ownedCards().filter((card) => {
+                if (card.archetype !== archetype) {
+                    return false;
+                }
+
+                return !options.excludeUid || card.uid !== options.excludeUid;
+            });
+        },
+
+        falconCards(context, archetype = "falcon-risk", options = {}) {
             if (context.pondCardsByArchetype) {
                 return context.pondCardsByArchetype(archetype, options);
             }
@@ -128,6 +146,23 @@ window.FISHING_CARD_EFFECTS = {
 
             target.value = (target.value || 0) + Math.floor(amount);
             return Math.floor(amount);
+        },
+
+        removeValue(context, target, amount, sourceCard = null, minimum = 1) {
+            if (!target || amount <= 0) {
+                return 0;
+            }
+
+            const current = Math.floor(target.value || 0);
+            const next = Math.max(minimum, current - Math.floor(amount));
+            const changed = current - next;
+
+            if (changed <= 0) {
+                return 0;
+            }
+
+            target.value = next;
+            return changed;
         },
 
         lowestByValue(cards, context, count) {

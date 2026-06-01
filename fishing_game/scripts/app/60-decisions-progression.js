@@ -101,16 +101,18 @@ function openCheckpointDecision() {
     const totalValue = pondTotalValue();
     const target = checkpointTargetForDay(state.day);
     const passed = totalValue >= target;
+    runCardAndCharacterHook("onCheckpoint", { totalValue, target, passed, checkpointDay: state.day });
     runEventSystemHook("onCheckpoint", { totalValue, target, passed });
     const coinSettlement = settleCheckpointCoins(totalValue, target, passed);
+    const resolvedTotalValue = pondTotalValue();
     state.decisionLocked = true;
     state.lastCheckpointDay = state.day;
     elements.decisionModal.hidden = false;
     elements.decisionTitle.textContent = passed ? "三日结算达标" : "三日结算失败";
     elements.decisionCopy.textContent = passed
-        ? `第 ${state.day} 天结束，水族馆总价值 ${totalValue}/${target}，可以继续航行。`
-        : `第 ${state.day} 天结束，水族馆总价值 ${totalValue}/${target}，未达到标准，本轮结束。`;
-    elements.decisionPreview.innerHTML = checkpointSummaryTemplate(totalValue, target, passed, coinSettlement);
+        ? `第 ${state.day} 天结束，水族馆总价值 ${resolvedTotalValue}/${target}，可以继续航行。`
+        : `第 ${state.day} 天结束，水族馆总价值 ${resolvedTotalValue}/${target}，未达到标准，本轮结束。`;
+    elements.decisionPreview.innerHTML = checkpointSummaryTemplate(resolvedTotalValue, target, passed, coinSettlement);
     elements.decisionOptions.innerHTML = "";
 
     const primaryButton = document.createElement("button");
@@ -146,11 +148,16 @@ function openCheckpointDecision() {
 }
 
 function completeDayAdvance() {
+    state.previousDailyCatchCount = state.dailyCatchCount || 0;
+    state.previousDailySoldFishCount = state.dailySoldFishCount || 0;
+    state.previousDailyCombineCount = state.dailyCombineCount || 0;
     state.day += 1;
     pulseDayChange();
     state.decisionLocked = true;
     state.dayTransitioning = true;
     state.dailyCatchCount = 0;
+    state.dailySoldFishCount = 0;
+    state.dailyCombineCount = 0;
     resetDailyCardState();
     clearCatchChoices();
     startCurrentDay();

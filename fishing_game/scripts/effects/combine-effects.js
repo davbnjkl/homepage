@@ -79,7 +79,7 @@ schoolMotherOfStarsCombine: {
 
                 if (utils.star(card) >= 3 && (combined.star || 1) >= 3) {
                     utils.schoolCards(context, effect.archetype).forEach((target) => {
-                        utils.addValue(context, target, 3, card);
+                        utils.addValue(context, target, 2, card);
                     });
                 }
 
@@ -96,24 +96,39 @@ schoolAllScalesOneCombine: {
                     return;
                 }
 
-                const multiplier = utils.star(card) >= 2 ? 3 : 2;
-                const repeat = utils.star(card) >= 3 ? 2 : 1;
+                const multiplier = utils.star(card) >= 2 ? 2 : 1;
                 const amount = (combined.star || 1) * multiplier;
                 let changed = 0;
 
-                for (let index = 0; index < repeat; index += 1) {
-                    utils.schoolCards(context, effect.archetype).forEach((target) => {
-                        changed += utils.addValue(context, target, amount, card);
-                    });
-                }
+                utils.schoolCards(context, effect.archetype).forEach((target) => {
+                    changed += utils.addValue(context, target, amount, card);
+                });
 
                 if (utils.star(card) >= 3) {
-                    changed += utils.addValue(context, card, 9 * repeat, card);
+                    changed += utils.addValue(context, card, 6, card);
                 }
 
                 if (changed > 0) {
                     context.addLog(`${card.name} 万鳞归一，鱼群合计价值 +${changed}。`);
                 }
+            }
+        },
+
+falconFrostStarCombine: {
+            run(effect, card, context) {
+                const utils = window.FISHING_CARD_EFFECTS.utils;
+                const combined = context.combinedCard;
+                const amount = utils.starValue(effect, "amounts", card, 6);
+
+                utils.addValue(context, card, amount, card);
+
+                if (utils.star(card) >= 3 && (combined?.star || 1) >= 3) {
+                    utils.falconCards(context, effect.archetype).forEach((target) => {
+                        utils.addValue(context, target, effect.star3AllBonus || 3, card);
+                    });
+                }
+
+                context.addLog(`${card.name} 猎星合成，价值 +${amount}。`);
             }
         }
 });

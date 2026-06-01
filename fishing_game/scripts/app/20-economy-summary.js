@@ -161,15 +161,20 @@ function fishingCost() {
         BASE_FISHING_COST,
         effectContext({ baitId })
     );
+    const discountedCost = cost - Math.max(0, Math.floor(state.nextFishingCostDiscount || 0));
 
-    return Math.max(0, Math.floor(cost));
+    return Math.max(0, Math.floor(discountedCost));
 }
 
 function baseDailyCoinCap() {
+    state.temporaryBaseDailyCoinCapMods = (state.temporaryBaseDailyCoinCapMods || [])
+        .filter((modifier) => !Number.isFinite(modifier.untilDay) || modifier.untilDay >= state.day);
+    const temporaryCapMod = state.temporaryBaseDailyCoinCapMods
+        .reduce((sum, modifier) => sum + (modifier.amount || 0), 0);
     const modifiedCap = EFFECTS.modifyNumberWithCards(
         effectSources(),
         "modifyBaseDailyCoinCap",
-        MAX_BASE_DAILY_COINS,
+        MAX_BASE_DAILY_COINS + temporaryCapMod,
         effectContext({ baseCap: MAX_BASE_DAILY_COINS })
     );
 
@@ -225,6 +230,7 @@ function gainBaseDailyCoins() {
 }
 
 function startCurrentDay(options = {}) {
+    state.dayStartCoinsBeforeIncome = state.coins;
     gainBaseDailyCoins();
 
     if (options.growCards !== false) {

@@ -1102,14 +1102,14 @@ body.has-selected-catch .catch-action-row {
 }
 
 .slot .fish-value {
-    right: 11.8%;
-    bottom: 10.2%;
-    width: clamp(19px, 4.45vw, 26px);
-    font-size: clamp(0.54rem, 1.25vw, 0.68rem);
+    right: 10.9%;
+    bottom: 9.6%;
+    width: clamp(22px, 5vw, 30px);
+    font-size: clamp(0.62rem, 1.45vw, 0.76rem);
 }
 
 .slot .fish-value-number {
-    transform: translateY(1px);
+    transform: translate(0, 1px);
 }
 
 body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-empty {
@@ -1738,8 +1738,8 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     height: 100%;
     min-height: 250px;
     display: grid;
-    grid-template-rows: minmax(128px, 1fr) auto;
-    gap: 10px;
+    grid-template-rows: auto minmax(118px, 1fr) auto;
+    gap: 8px;
     padding: 10px 8px;
     overflow: visible;
     background: transparent;
@@ -1748,10 +1748,29 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 }
 
 .decision-modal.catch-choice-modal .fish-card::after,
-.decision-modal.catch-choice-modal .fish-card-header,
 .decision-modal.catch-choice-modal .fish-value,
+.decision-modal.catch-choice-modal .fish-stars,
 .decision-modal.catch-choice-modal .fish-detail-race {
     display: none;
+}
+
+.decision-modal.catch-choice-modal .fish-card-header {
+    display: flex;
+    justify-content: center;
+    min-height: 28px;
+    margin: 0;
+    padding: 0;
+}
+
+.decision-modal.catch-choice-modal .fish-name {
+    max-width: 100%;
+    color: #fff7d0;
+    font-size: clamp(1.05rem, 2.8vw, 1.28rem);
+    line-height: 1.05;
+    text-align: center;
+    text-shadow:
+        0 3px 0 #000,
+        0 0 10px rgba(255, 216, 90, 0.18);
 }
 
 .decision-modal.catch-choice-modal .fish-card.has-art .fish-sprite,
@@ -1900,13 +1919,13 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
     position: absolute;
     left: 14.6%;
     right: 22%;
-    top: 67.4%;
-    bottom: 12.2%;
+    top: 72.5%;
+    bottom: 12.8%;
     display: block;
     margin: 0;
     padding: 0;
-    font-size: clamp(0.78rem, 2.7vw, 0.98rem);
-    line-height: 1.18;
+    font-size: clamp(0.74rem, 2.55vw, 0.92rem);
+    line-height: 1.16;
 }
 
 .decision-modal.card-detail-modal .fish-detail-race {
@@ -1914,8 +1933,8 @@ body.has-selected-catch .pond-grid > .slot-open:not([data-card-index]) .slot-emp
 }
 
 .decision-modal.card-detail-modal .fish-value {
-    right: 10.7%;
-    bottom: 10.1%;
+    right: 10.4%;
+    bottom: 9.7%;
     width: clamp(40px, 11.5vw, 54px);
     font-size: clamp(0.9rem, 3.5vw, 1.22rem);
 }
